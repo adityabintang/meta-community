@@ -1,15 +1,12 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Users, Calendar, Sparkles } from "lucide-react";
 import { useRef } from "react";
-
-const stats = [
-  { icon: Users, value: "160+", label: "Member Aktif" },
-  { icon: Calendar, value: "2+", label: "Event Terselenggara" },
-  { icon: Sparkles, value: "∞", label: "Peluang Kolaborasi" },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
+import { translations } from "@/i18n/translations";
 
 const HeroSection = () => {
   const ref = useRef(null);
+  const { t } = useLanguage();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
 
   const bgY1 = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
@@ -19,9 +16,14 @@ const HeroSection = () => {
   const statsY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
+  const stats = [
+    { icon: Users, value: "160+", label: t(translations.hero.statMembers) },
+    { icon: Calendar, value: "2+", label: t(translations.hero.statEvents) },
+    { icon: Sparkles, value: "∞", label: t(translations.hero.statCollab) },
+  ];
+
   return (
     <section id="home" ref={ref} className="relative min-h-screen flex items-center pt-20 overflow-hidden">
-      {/* Parallax background decoration */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5" />
         <motion.div style={{ y: bgY1 }} className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-accent/8 blur-3xl animate-float" />
@@ -31,13 +33,9 @@ const HeroSection = () => {
 
       <motion.div style={{ y: textY, opacity }} className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
             <span className="inline-block px-4 py-1.5 rounded-full bg-secondary text-muted-foreground text-xs font-medium tracking-wider uppercase mb-6">
-              Komunitas Terbuka untuk Semua
+              {t(translations.hero.badge)}
             </span>
           </motion.div>
 
@@ -47,9 +45,9 @@ const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl sm:text-5xl md:text-7xl font-display font-bold leading-tight tracking-tight mb-6"
           >
-            Berkolaborasi &{" "}
-            <span className="text-accent">Bertumbuh</span>{" "}
-            Bersama
+            {t(translations.hero.title1)}{" "}
+            <span className="text-accent">{t(translations.hero.titleAccent)}</span>{" "}
+            {t(translations.hero.title2)}
           </motion.h1>
 
           <motion.p
@@ -58,7 +56,7 @@ const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Komunitas Meta adalah wadah terbuka untuk siapa saja — coders, non-coders, vibecoders, digital marketers, business owners, maupun tech enthusiast — yang ingin belajar, bertanya, berdiskusi, dan berbagi insight & pengalaman.
+            {t(translations.hero.description)}
           </motion.p>
 
           <motion.div
@@ -68,14 +66,13 @@ const HeroSection = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center mb-20"
           >
             <a href="#product" className="px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity">
-              Jelajahi Sekarang
+              {t(translations.hero.cta1)}
             </a>
             <a href="#event" className="px-8 py-3.5 rounded-lg border border-border text-foreground font-medium hover:bg-secondary transition-colors">
-              Lihat Event
+              {t(translations.hero.cta2)}
             </a>
           </motion.div>
 
-          {/* Stats with separate parallax speed */}
           <motion.div
             style={{ y: statsY }}
             initial={{ opacity: 0, y: 40 }}
