@@ -164,8 +164,6 @@ const Header = () => {
                 <a href="https://chat.whatsapp.com/FWjeqZuUleW4s9wg4FnqXS" target="_blank" rel="noopener noreferrer" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
                   {t(translations.nav.join)}
                 </a>
-                  {t(translations.nav.join)}
-                </Link>
               </div>
             </nav>
           </motion.div>
