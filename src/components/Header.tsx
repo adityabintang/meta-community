@@ -12,6 +12,8 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   const navItems = [
     { label: t(translations.nav.home), href: "#home" },
