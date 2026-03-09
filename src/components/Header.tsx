@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Sun, Moon, Globe } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations } from "@/i18n/translations";
 import logoLight from "@/assets/meta-logo-light.png";
@@ -16,7 +17,7 @@ const Header = () => {
     { label: t(translations.nav.home), href: "#home" },
     { label: t(translations.nav.product), href: "#product" },
     { label: t(translations.nav.news), href: "#news" },
-    { label: t(translations.nav.event), href: "#event" },
+    { label: t(translations.nav.event), href: "/event", isRoute: true },
   ];
 
   useEffect(() => {
@@ -59,16 +60,27 @@ const Header = () => {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
-          {navItems.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative group"
-            >
-              {item.label}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all group-hover:w-full" />
-            </a>
-          ))}
+          {navItems.map((item) =>
+            item.isRoute ? (
+              <Link
+                key={item.href}
+                to={item.href}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative group"
+              >
+                {item.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all group-hover:w-full" />
+              </Link>
+            ) : (
+              <a
+                key={item.href}
+                href={item.href}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative group"
+              >
+                {item.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all group-hover:w-full" />
+              </a>
+            )
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
@@ -108,16 +120,27 @@ const Header = () => {
             className="md:hidden border-t border-border/40"
           >
             <nav className="px-6 py-4 flex flex-col gap-4">
-              {navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="text-foreground font-medium py-2"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.label}
-                </a>
-              ))}
+              {navItems.map((item) =>
+                item.isRoute ? (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className="text-foreground font-medium py-2"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ) : (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className="text-foreground font-medium py-2"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {item.label}
+                  </a>
+                )
+              )}
               <div className="flex items-center gap-3">
                 <button
                   onClick={toggleLanguage}
