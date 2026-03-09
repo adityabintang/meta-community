@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import logoLight from "@/assets/meta-logo-light.png";
 import logoDark from "@/assets/meta-logo-dark.png";
 
@@ -17,12 +17,19 @@ const Header = () => {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsDark(document.documentElement.classList.contains("dark"));
-    check();
-    const observer = new MutationObserver(check);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+      setIsDark(true);
+    }
   }, []);
+
+  const toggleDark = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -59,9 +66,18 @@ const Header = () => {
           ))}
         </nav>
 
-        <a href="#home" className="hidden md:inline-flex px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
-          Bergabung
-        </a>
+        <div className="hidden md:flex items-center gap-3">
+          <button
+            onClick={toggleDark}
+            className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+            aria-label="Toggle dark mode"
+          >
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          <a href="#home" className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+            Bergabung
+          </a>
+        </div>
 
         {/* Mobile toggle */}
         <button className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -89,9 +105,17 @@ const Header = () => {
                   {item.label}
                 </a>
               ))}
-              <a href="#home" className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
-                Bergabung
-              </a>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleDark}
+                  className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
+                >
+                  {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+                <a href="#home" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
+                  Bergabung
+                </a>
+              </div>
             </nav>
           </motion.div>
         )}
