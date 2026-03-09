@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, X, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { translations } from "@/i18n/translations";
 import logoLight from "@/assets/meta-logo-light.png";
 import logoDark from "@/assets/meta-logo-dark.png";
 
@@ -26,8 +28,8 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const { t } = useLanguage();
 
-  // Check dark mode
   const isDark = document.documentElement.classList.contains("dark");
 
   return (
@@ -60,7 +62,7 @@ const LoginPage = () => {
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card/60 backdrop-blur-xl border border-border/60 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
         >
           <ArrowLeft size={16} />
-          Beranda
+          {t(translations.login.backHome)}
         </Link>
       </motion.div>
 
@@ -71,7 +73,6 @@ const LoginPage = () => {
         className="w-full max-w-md relative"
       >
         <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-2xl p-8 shadow-card-hover relative">
-
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <Link to="/" className="flex items-center gap-2">
@@ -91,7 +92,7 @@ const LoginPage = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Masuk
+                {t(translations.login.tabLogin)}
               </button>
               <button
                 onClick={() => setActiveTab("register")}
@@ -101,19 +102,17 @@ const LoginPage = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Daftar
+                {t(translations.login.tabRegister)}
               </button>
             </div>
           </div>
 
           {/* Title */}
           <h1 className="font-display text-2xl font-bold text-foreground text-center mb-2">
-            {activeTab === "login" ? "Selamat datang kembali" : "Buat akun baru"}
+            {activeTab === "login" ? t(translations.login.welcomeBack) : t(translations.login.createAccount)}
           </h1>
           <p className="text-sm text-muted-foreground text-center mb-8">
-            {activeTab === "login"
-              ? "Masuk ke akun Meta Community kamu"
-              : "Bergabung dengan Meta Community sekarang"}
+            {activeTab === "login" ? t(translations.login.subtitleLogin) : t(translations.login.subtitleRegister)}
           </p>
 
           {/* Form */}
@@ -126,7 +125,7 @@ const LoginPage = () => {
                 </svg>
                 <input
                   type="text"
-                  placeholder="Nama lengkap"
+                  placeholder={t(translations.login.fullName)}
                   className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
                 />
               </div>
@@ -136,7 +135,7 @@ const LoginPage = () => {
               <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t(translations.login.emailPlaceholder)}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
@@ -147,7 +146,7 @@ const LoginPage = () => {
               <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
+                placeholder={t(translations.login.passwordPlaceholder)}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm pl-11 pr-11 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
@@ -170,10 +169,10 @@ const LoginPage = () => {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="rounded border-border accent-accent"
                   />
-                  <span className="text-sm text-muted-foreground">Remember me</span>
+                  <span className="text-sm text-muted-foreground">{t(translations.login.rememberMe)}</span>
                 </label>
                 <button type="button" className="text-sm text-accent hover:underline transition-colors">
-                  Forgot password?
+                  {t(translations.login.forgotPassword)}
                 </button>
               </div>
             )}
@@ -182,14 +181,14 @@ const LoginPage = () => {
               type="submit"
               className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium hover:opacity-90 transition-opacity shadow-card"
             >
-              {activeTab === "login" ? "Sign in" : "Sign up"}
+              {activeTab === "login" ? t(translations.login.signIn) : t(translations.login.signUp)}
             </button>
           </form>
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-border/60" />
-            <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Or continue with</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{t(translations.login.orContinueWith)}</span>
             <div className="flex-1 h-px bg-border/60" />
           </div>
 
@@ -213,8 +212,8 @@ const LoginPage = () => {
 
           {/* Terms */}
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            By signing in, you agree to our{" "}
-            <Link to="/syarat-layanan" className="text-accent hover:underline">Terms & Service</Link>
+            {t(translations.login.termsText)}{" "}
+            <Link to="/syarat-layanan" className="text-accent hover:underline">{t(translations.login.termsLink)}</Link>
           </p>
         </div>
       </motion.div>
