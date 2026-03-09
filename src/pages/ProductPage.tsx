@@ -20,7 +20,7 @@ const ProductPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const projects = translations.showcase.items;
+  const projects = [...translations.showcase.items];
 
   const filtered = useMemo(() => {
     let result = projects;
@@ -37,7 +37,7 @@ const ProductPage = () => {
       );
     }
     return result;
-  }, [selectedCategory, searchQuery, t, projects]);
+  }, [selectedCategory, searchQuery, t]);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
