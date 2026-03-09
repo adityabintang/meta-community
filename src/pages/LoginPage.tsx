@@ -71,10 +71,6 @@ const LoginPage = () => {
         className="w-full max-w-md relative"
       >
         <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-2xl p-8 shadow-card-hover relative">
-          {/* Close */}
-          <Link to="/" className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
-            <X size={20} />
-          </Link>
 
           {/* Logo */}
           <div className="flex justify-center mb-6">
