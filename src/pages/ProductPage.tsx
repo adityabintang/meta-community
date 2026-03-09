@@ -177,7 +177,7 @@ const ProductPage = () => {
               transition={{ delay: 0.5 }}
               className="text-center text-sm text-muted-foreground mt-10"
             >
-              {t(translations.showcase.showing)} {filtered.length} {t(translations.showcase.projectsText)}
+              {t(translations.showcase.showing)} {filtered.length} {t(translations.showcase.productsText)}
             </motion.p>
           )}
         </div>

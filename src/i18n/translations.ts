@@ -407,11 +407,11 @@ export const translations = {
   // Product Showcase
   showcase: {
     badge: { id: "Showcase", en: "Showcase" },
-    title1: { id: "Karya", en: "Member" },
-    titleAccent: { id: "Member", en: "Projects" },
+    title1: { id: "Produk", en: "Member" },
+    titleAccent: { id: "Member", en: "Products" },
     subtitle: {
-      id: "Jelajahi project-project terbaik yang dibangun oleh member Meta Community.",
-      en: "Explore the best projects built by Meta Community members.",
+      id: "Jelajahi produk-produk terbaik yang dibangun oleh member Meta Community.",
+      en: "Explore the best products built by Meta Community members.",
     },
     filterAll: { id: "Semua", en: "All" },
     catWeb: { id: "Web App", en: "Web App" },
@@ -419,11 +419,11 @@ export const translations = {
     catLanding: { id: "Landing Page", en: "Landing Page" },
     catEcommerce: { id: "E-Commerce", en: "E-Commerce" },
     catDashboard: { id: "Dashboard", en: "Dashboard" },
-    searchPlaceholder: { id: "Cari project...", en: "Search projects..." },
-    viewProject: { id: "Lihat Project", en: "View Project" },
-    noResults: { id: "Tidak ada project yang ditemukan.", en: "No projects found." },
+    searchPlaceholder: { id: "Cari produk...", en: "Search products..." },
+    viewProduct: { id: "Lihat Produk", en: "View Product" },
+    noResults: { id: "Tidak ada produk yang ditemukan.", en: "No products found." },
     showing: { id: "Menampilkan", en: "Showing" },
-    projectsText: { id: "project", en: "projects" },
+    productsText: { id: "produk", en: "products" },
     items: [
       {
         id: "1",
