@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Mail, Lock, Eye, EyeOff, X } from "lucide-react";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24">
@@ -10,45 +12,163 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const GitHubIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+  </svg>
+);
+
 const LoginPage = () => {
+  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4" style={{ backgroundImage: "radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)", backgroundSize: "24px 24px" }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-sm"
+        className="w-full max-w-md relative"
       >
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-block mb-6">
-            <h1 className="font-display text-2xl font-bold text-foreground">Meta Community</h1>
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-card relative">
+          {/* Close button */}
+          <Link to="/" className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
+            <X size={20} />
           </Link>
-          <p className="text-muted-foreground text-sm">Masuk untuk bergabung dengan komunitas</p>
-        </div>
 
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-card">
-          <button
-            onClick={() => {}}
-            className="w-full flex items-center justify-center gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
-          >
-            <GoogleIcon />
-            Sign in with Google
-          </button>
-
-          <div className="mt-6 text-center">
-            <p className="text-xs text-muted-foreground">
-              Dengan masuk, kamu menyetujui{" "}
-              <Link to="/syarat-layanan" className="text-accent hover:underline">Syarat Layanan</Link>
-              {" "}dan{" "}
-              <Link to="/kebijakan-privasi" className="text-accent hover:underline">Kebijakan Privasi</Link>
-            </p>
+          {/* Dark mode icon placeholder */}
+          <div className="mb-6">
+            <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </div>
           </div>
-        </div>
 
-        <div className="mt-6 text-center">
-          <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            ← Kembali ke beranda
-          </Link>
+          {/* Tabs */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="inline-flex rounded-full border border-border p-1 bg-background">
+              <button
+                onClick={() => setActiveTab("login")}
+                className={`px-5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  activeTab === "login"
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Masuk
+              </button>
+              <button
+                onClick={() => setActiveTab("register")}
+                className={`px-5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  activeTab === "register"
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Daftar
+              </button>
+            </div>
+          </div>
+
+          {/* Title */}
+          <h1 className="font-display text-2xl font-bold text-foreground text-center mb-8">
+            {activeTab === "login" ? "Selamat datang kembali" : "Buat akun baru"}
+          </h1>
+
+          {/* Form */}
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+            {/* Email */}
+            <div className="relative">
+              <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-xl border border-border bg-background pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+              />
+            </div>
+
+            {/* Password */}
+            <div className="relative">
+              <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl border border-border bg-background pl-11 pr-11 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            {/* Remember me & Forgot */}
+            {activeTab === "login" && (
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <span className="text-sm text-muted-foreground">Remember me</span>
+                </label>
+                <button type="button" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-foreground text-background py-3 text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              {activeTab === "login" ? "Sign in" : "Sign up"}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">Or continue with</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          {/* Social */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {}}
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+            >
+              <GoogleIcon />
+              Google
+            </button>
+            <button
+              onClick={() => {}}
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+            >
+              <GitHubIcon />
+              GitHub
+            </button>
+          </div>
+
+          {/* Terms */}
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            By signing in, you agree to our{" "}
+            <Link to="/syarat-layanan" className="text-accent hover:underline">Terms & Service</Link>
+          </p>
         </div>
       </motion.div>
     </div>
