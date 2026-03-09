@@ -135,22 +135,21 @@ const ProductPage = () => {
                 {/* Content */}
                 <div className="p-5">
                   <h3 className="font-display font-bold text-foreground text-base mb-2 leading-snug line-clamp-1 group-hover:text-accent transition-colors">
-                    {t(project.title)}
+                    {t(product.title)}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
-                    {t(project.description)}
+                    {t(product.description)}
                   </p>
 
-                  {/* Author + CTA */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center">
                         <User className="w-3.5 h-3.5 text-muted-foreground" />
                       </div>
-                      <span className="text-xs text-muted-foreground font-medium">{project.author}</span>
+                      <span className="text-xs text-muted-foreground font-medium">{product.author}</span>
                     </div>
                     <button className="flex items-center gap-1.5 text-xs font-medium text-accent hover:underline transition-colors">
-                      {t(translations.showcase.viewProject)}
+                      {t(translations.showcase.viewProduct)}
                       <ExternalLink className="w-3 h-3" />
                     </button>
                   </div>
