@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, X } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, X, ArrowLeft } from "lucide-react";
+import logoLight from "@/assets/meta-logo-light.png";
+import logoDark from "@/assets/meta-logo-dark.png";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24">
@@ -25,37 +27,71 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
+  // Check dark mode
+  const isDark = document.documentElement.classList.contains("dark");
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4" style={{ backgroundImage: "radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)", backgroundSize: "24px 24px" }}>
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-background">
+      {/* Background blobs matching hero */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5" />
+        <motion.div
+          animate={{ y: [0, -20, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-accent/8 blur-3xl"
+        />
+        <motion.div
+          animate={{ y: [0, 15, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-1/4 left-1/4 w-72 h-72 rounded-full bg-primary/8 blur-3xl"
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-accent/3 blur-[100px]" />
+      </div>
+
+      {/* Back button */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
+        className="absolute top-6 left-6 z-10"
+      >
+        <Link
+          to="/"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card/60 backdrop-blur-xl border border-border/60 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+        >
+          <ArrowLeft size={16} />
+          Beranda
+        </Link>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
         className="w-full max-w-md relative"
       >
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-card relative">
-          {/* Close button */}
+        <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-2xl p-8 shadow-card-hover relative">
+          {/* Close */}
           <Link to="/" className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
             <X size={20} />
           </Link>
 
-          {/* Dark mode icon placeholder */}
-          <div className="mb-6">
-            <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            </div>
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Link to="/" className="flex items-center gap-2">
+              <img src={isDark ? logoDark : logoLight} alt="Meta Community" className="h-10 w-10 object-contain" />
+              <span className="font-display font-semibold text-foreground tracking-wide">Meta Community</span>
+            </Link>
           </div>
 
           {/* Tabs */}
           <div className="flex items-center justify-center mb-8">
-            <div className="inline-flex rounded-full border border-border p-1 bg-background">
+            <div className="inline-flex rounded-full border border-border/60 p-1 bg-secondary/50 backdrop-blur-sm">
               <button
                 onClick={() => setActiveTab("login")}
-                className={`px-5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-300 ${
                   activeTab === "login"
-                    ? "bg-foreground text-background"
+                    ? "bg-primary text-primary-foreground shadow-card"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -63,9 +99,9 @@ const LoginPage = () => {
               </button>
               <button
                 onClick={() => setActiveTab("register")}
-                className={`px-5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-300 ${
                   activeTab === "register"
-                    ? "bg-foreground text-background"
+                    ? "bg-primary text-primary-foreground shadow-card"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -75,13 +111,31 @@ const LoginPage = () => {
           </div>
 
           {/* Title */}
-          <h1 className="font-display text-2xl font-bold text-foreground text-center mb-8">
+          <h1 className="font-display text-2xl font-bold text-foreground text-center mb-2">
             {activeTab === "login" ? "Selamat datang kembali" : "Buat akun baru"}
           </h1>
+          <p className="text-sm text-muted-foreground text-center mb-8">
+            {activeTab === "login"
+              ? "Masuk ke akun Meta Community kamu"
+              : "Bergabung dengan Meta Community sekarang"}
+          </p>
 
           {/* Form */}
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-            {/* Email */}
+            {activeTab === "register" && (
+              <div className="relative">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Nama lengkap"
+                  className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
+                />
+              </div>
+            )}
+
             <div className="relative">
               <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -89,11 +143,10 @@ const LoginPage = () => {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-border bg-background pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+                className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
               />
             </div>
 
-            {/* Password */}
             <div className="relative">
               <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -101,7 +154,7 @@ const LoginPage = () => {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-border bg-background pl-11 pr-11 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+                className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm pl-11 pr-11 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
               />
               <button
                 type="button"
@@ -112,7 +165,6 @@ const LoginPage = () => {
               </button>
             </div>
 
-            {/* Remember me & Forgot */}
             {activeTab === "login" && (
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -120,20 +172,19 @@ const LoginPage = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-border"
+                    className="rounded border-border accent-accent"
                   />
                   <span className="text-sm text-muted-foreground">Remember me</span>
                 </label>
-                <button type="button" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <button type="button" className="text-sm text-accent hover:underline transition-colors">
                   Forgot password?
                 </button>
               </div>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
-              className="w-full rounded-xl bg-foreground text-background py-3 text-sm font-medium hover:opacity-90 transition-opacity"
+              className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium hover:opacity-90 transition-opacity shadow-card"
             >
               {activeTab === "login" ? "Sign in" : "Sign up"}
             </button>
@@ -141,23 +192,23 @@ const LoginPage = () => {
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">Or continue with</span>
-            <div className="flex-1 h-px bg-border" />
+            <div className="flex-1 h-px bg-border/60" />
+            <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Or continue with</span>
+            <div className="flex-1 h-px bg-border/60" />
           </div>
 
           {/* Social */}
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => {}}
-              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+              className="flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary/80 hover:shadow-card transition-all"
             >
               <GoogleIcon />
               Google
             </button>
             <button
               onClick={() => {}}
-              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+              className="flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary/80 hover:shadow-card transition-all"
             >
               <GitHubIcon />
               GitHub
