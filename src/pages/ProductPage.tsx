@@ -23,7 +23,7 @@ const ProductPage = () => {
   const products = [...translations.showcase.items];
 
   const filtered = useMemo(() => {
-    let result = projects;
+    let result = products;
     if (selectedCategory !== "all") {
       result = result.filter((p) => p.categoryId === selectedCategory);
     }
