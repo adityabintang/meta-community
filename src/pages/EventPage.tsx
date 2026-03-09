@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, MapPin, Users as UsersIcon, ExternalLink, ChevronDown, Grid3X3, List, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Calendar, Clock, MapPin, Users as UsersIcon, ExternalLink, ChevronDown, Grid3X3, List } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations } from "@/i18n/translations";
 import Header from "@/components/Header";
