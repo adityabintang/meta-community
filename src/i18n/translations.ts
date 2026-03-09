@@ -294,6 +294,27 @@ export const translations = {
     ],
   },
 
+  // Login
+  login: {
+    tabLogin: { id: "Masuk", en: "Sign In" },
+    tabRegister: { id: "Daftar", en: "Sign Up" },
+    welcomeBack: { id: "Selamat datang kembali", en: "Welcome back" },
+    createAccount: { id: "Buat akun baru", en: "Create a new account" },
+    subtitleLogin: { id: "Masuk ke akun Meta Community kamu", en: "Sign in to your Meta Community account" },
+    subtitleRegister: { id: "Bergabung dengan Meta Community sekarang", en: "Join Meta Community now" },
+    fullName: { id: "Nama lengkap", en: "Full name" },
+    emailPlaceholder: { id: "Masukkan email", en: "Enter your email" },
+    passwordPlaceholder: { id: "Masukkan password", en: "Enter your password" },
+    rememberMe: { id: "Ingat saya", en: "Remember me" },
+    forgotPassword: { id: "Lupa password?", en: "Forgot password?" },
+    signIn: { id: "Masuk", en: "Sign in" },
+    signUp: { id: "Daftar", en: "Sign up" },
+    orContinueWith: { id: "Atau lanjutkan dengan", en: "Or continue with" },
+    termsText: { id: "Dengan masuk, kamu menyetujui", en: "By signing in, you agree to our" },
+    termsLink: { id: "Syarat & Layanan", en: "Terms & Service" },
+    backHome: { id: "Beranda", en: "Home" },
+  },
+
   // Footer
   footer: {
     copyright: { id: "Seluruh hak cipta dilindungi.", en: "All rights reserved." },
