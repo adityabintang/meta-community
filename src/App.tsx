@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import Index from "./pages/Index";
 import EventPage from "./pages/EventPage";
+import ProductPage from "./pages/ProductPage";
 import KebijakanPrivasi from "./pages/KebijakanPrivasi";
 import SyaratLayanan from "./pages/SyaratLayanan";
 import LoginPage from "./pages/LoginPage";
@@ -22,6 +23,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/product" element={<ProductPage />} />
             <Route path="/event" element={<EventPage />} />
             <Route path="/kebijakan-privasi" element={<KebijakanPrivasi />} />
             <Route path="/syarat-layanan" element={<SyaratLayanan />} />
