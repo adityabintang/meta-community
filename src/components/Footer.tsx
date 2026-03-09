@@ -20,7 +20,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-3 gap-12 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src={isDark ? logoDark : logoLight} alt="Meta Community" className="h-8 w-8 object-contain" />
+              <img src={isDark ? logoDark : logoLight} alt="Meta Community" className="h-14 w-14 object-contain" />
               <span className="font-display font-semibold text-lg text-foreground">META COMMUNITY</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">

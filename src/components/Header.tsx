@@ -50,7 +50,7 @@ const Header = () => {
     >
       <div className="container mx-auto px-6 flex items-center justify-between h-14 md:h-16">
         <a href="#home" className="flex items-center gap-2">
-          <img src={isDark ? logoDark : logoLight} alt="Meta Community" className="h-9 w-9 object-contain" />
+          <img src={isDark ? logoDark : logoLight} alt="Meta Community" className="h-12 w-12 object-contain" />
           <span className="font-display font-semibold text-base tracking-wide text-foreground">Meta Community</span>
         </a>
 
