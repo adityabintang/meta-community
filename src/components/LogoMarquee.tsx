@@ -25,7 +25,9 @@ const LogoMarquee = () => {
   const doubled = [...logos, ...logos, ...logos, ...logos];
 
   return (
-    <section className="py-12 border-y border-border/50 bg-secondary/20 overflow-hidden">
+    <section className="py-12 border-y border-border/50 bg-secondary/20 overflow-hidden relative">
+      <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-r from-[hsl(var(--background))] to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-l from-[hsl(var(--background))] to-transparent z-10 pointer-events-none" />
       <div className="flex animate-marquee hover:[animation-play-state:paused] w-max">
         {doubled.map((logo, i) => (
           <LogoItem key={`${logo.name}-${i}`} logo={logo} />

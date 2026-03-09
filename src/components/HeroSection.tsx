@@ -58,7 +58,7 @@ const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Meta Community adalah komunitas yang sangat terbuka untuk seluruh pesertanya untuk saling berkolaborasi dan sharing knowledge bersama.
+            Komunitas Meta adalah wadah terbuka untuk siapa saja — coders, non-coders, vibecoders, digital marketers, business owners, maupun tech enthusiast — yang ingin belajar, bertanya, berdiskusi, dan berbagi insight & pengalaman.
           </motion.p>
 
           <motion.div
