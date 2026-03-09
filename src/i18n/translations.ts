@@ -169,6 +169,7 @@ export const translations = {
         status: { id: "Selesai", en: "Completed" },
         attendees: 85,
         gradient: "from-[hsl(200_60%_40%)] to-[hsl(220_70%_50%)]",
+        image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop",
         description: {
           id: "Membahas tren terbaru web development tahun 2026, termasuk framework modern, AI-assisted coding, dan arsitektur frontend.",
           en: "Discussing the latest web development trends of 2026, including modern frameworks, AI-assisted coding, and frontend architecture.",
