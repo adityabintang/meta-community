@@ -112,7 +112,7 @@ const ProductPage = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {filtered.map((product, i) => (
               <motion.div
-                key={project.id}
+                key={product.id}
                 initial={{ opacity: 0, y: 25 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: i * 0.06 }}
