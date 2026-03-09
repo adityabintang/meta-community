@@ -214,6 +214,7 @@ export const translations = {
         status: { id: "Segera", en: "Upcoming" },
         attendees: null,
         gradient: "from-[hsl(250_60%_45%)] to-[hsl(280_60%_55%)]",
+        image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&h=400&fit=crop",
         description: {
           id: "Kompetisi hackathon untuk membangun solusi teknologi yang bermanfaat bagi komunitas. Hadiah total jutaan rupiah!",
           en: "Hackathon competition to build technology solutions for the community. Millions in total prizes!",
