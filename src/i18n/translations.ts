@@ -20,7 +20,7 @@ export const translations = {
       id: "Komunitas Meta adalah wadah terbuka untuk siapa saja — coders, non-coders, vibecoders, digital marketers, business owners, maupun tech enthusiast — yang ingin belajar, bertanya, berdiskusi, dan berbagi insight & pengalaman.",
       en: "Meta Community is an open space for everyone — coders, non-coders, vibecoders, digital marketers, business owners, and tech enthusiasts — who want to learn, ask, discuss, and share insights & experiences.",
     },
-    cta1: { id: "Jelajahi Sekarang", en: "Explore Now" },
+    cta1: { id: "Bergabung Komunitas Sekarang", en: "Join the Community" },
     cta2: { id: "Lihat Event", en: "View Events" },
     statMembers: { id: "Member Aktif", en: "Active Members" },
     statEvents: { id: "Event Terselenggara", en: "Events Held" },
