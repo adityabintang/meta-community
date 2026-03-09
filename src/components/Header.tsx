@@ -124,11 +124,13 @@ const Header = () => {
             className="md:hidden border-t border-border/40"
           >
             <nav className="px-6 py-4 flex flex-col gap-4">
-              {navItems.map((item) =>
-                item.isRoute ? (
+              {navItems.map((item) => {
+                const isRouteLink = item.isRoute || (!isHome && !item.isRoute);
+                const target = item.isRoute ? item.href : (!isHome ? `/${item.href}` : item.href);
+                return isRouteLink ? (
                   <Link
                     key={item.href}
-                    to={item.href}
+                    to={target}
                     className="text-foreground font-medium py-2"
                     onClick={() => setMobileOpen(false)}
                   >
@@ -143,8 +145,8 @@ const Header = () => {
                   >
                     {item.label}
                   </a>
-                )
-              )}
+                );
+              })}
               <div className="flex items-center gap-3">
                 <button
                   onClick={toggleLanguage}
