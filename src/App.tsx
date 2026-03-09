@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import EventPage from "./pages/EventPage";
 import KebijakanPrivasi from "./pages/KebijakanPrivasi";
 import SyaratLayanan from "./pages/SyaratLayanan";
+import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
