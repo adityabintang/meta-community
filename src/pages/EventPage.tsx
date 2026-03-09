@@ -38,21 +38,6 @@ const EventPage = () => {
 
       <main className="pt-28 pb-20">
         <div className="container mx-auto px-6">
-          {/* Back link */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-8"
-          >
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" /> {t(translations.legal.backHome)}
-            </Link>
-          </motion.div>
-
           {/* Page Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
