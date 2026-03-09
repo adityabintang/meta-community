@@ -12,6 +12,8 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   const navItems = [
     { label: t(translations.nav.home), href: "#home" },
@@ -53,18 +55,20 @@ const Header = () => {
       }`}
     >
       <div className="container mx-auto px-6 flex items-center justify-between h-14 md:h-16">
-        <a href="#home" className="flex items-center gap-2">
+        <Link to={isHome ? "#home" : "/"} className="flex items-center gap-2">
           <img src={isDark ? logoDark : logoLight} alt="Meta Community" className="h-12 w-12 object-contain" />
           <span className="font-display font-semibold text-base tracking-wide text-foreground">Meta Community</span>
-        </a>
+        </Link>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
-          {navItems.map((item) =>
-            item.isRoute ? (
+          {navItems.map((item) => {
+            const isRouteLink = item.isRoute || (!isHome && !item.isRoute);
+            const target = item.isRoute ? item.href : (!isHome ? `/${item.href}` : item.href);
+            return isRouteLink ? (
               <Link
                 key={item.href}
-                to={item.href}
+                to={target}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative group"
               >
                 {item.label}
@@ -79,8 +83,8 @@ const Header = () => {
                 {item.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all group-hover:w-full" />
               </a>
-            )
-          )}
+            );
+          })}
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
@@ -99,9 +103,9 @@ const Header = () => {
           >
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <a href="#home" className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+          <Link to={isHome ? "#home" : "/"} className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
             {t(translations.nav.join)}
-          </a>
+          </Link>
         </div>
 
         {/* Mobile toggle */}
@@ -120,11 +124,13 @@ const Header = () => {
             className="md:hidden border-t border-border/40"
           >
             <nav className="px-6 py-4 flex flex-col gap-4">
-              {navItems.map((item) =>
-                item.isRoute ? (
+              {navItems.map((item) => {
+                const isRouteLink = item.isRoute || (!isHome && !item.isRoute);
+                const target = item.isRoute ? item.href : (!isHome ? `/${item.href}` : item.href);
+                return isRouteLink ? (
                   <Link
                     key={item.href}
-                    to={item.href}
+                    to={target}
                     className="text-foreground font-medium py-2"
                     onClick={() => setMobileOpen(false)}
                   >
@@ -139,8 +145,8 @@ const Header = () => {
                   >
                     {item.label}
                   </a>
-                )
-              )}
+                );
+              })}
               <div className="flex items-center gap-3">
                 <button
                   onClick={toggleLanguage}
@@ -155,9 +161,9 @@ const Header = () => {
                 >
                   {isDark ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
-                <a href="#home" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
+                <Link to={isHome ? "#home" : "/"} className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
                   {t(translations.nav.join)}
-                </a>
+                </Link>
               </div>
             </nav>
           </motion.div>
