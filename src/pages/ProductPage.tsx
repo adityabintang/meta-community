@@ -110,7 +110,7 @@ const ProductPage = () => {
 
           {/* Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {filtered.map((project, i) => (
+            {filtered.map((product, i) => (
               <motion.div
                 key={project.id}
                 initial={{ opacity: 0, y: 25 }}
