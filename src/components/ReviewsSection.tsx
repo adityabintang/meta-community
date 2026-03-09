@@ -54,6 +54,8 @@ const ReviewsSection = () => {
 
   return (
     <section id="news" className="py-24 md:py-32 bg-secondary/30 relative overflow-hidden" ref={ref}>
+      <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-[hsl(var(--background)/0.8)] to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-[hsl(var(--background)/0.8)] to-transparent z-10 pointer-events-none" />
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
