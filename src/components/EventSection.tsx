@@ -1,4 +1,4 @@
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { Calendar, MapPin, Users } from "lucide-react";
 
@@ -29,9 +29,18 @@ const events = [
 const EventSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+
+  const cardsY = useTransform(scrollYProgress, [0, 1], ["6%", "-4%"]);
 
   return (
-    <section id="event" className="py-24 md:py-32" ref={ref}>
+    <section id="event" className="py-24 md:py-32 relative overflow-hidden" ref={ref}>
+      {/* Parallax background orb */}
+      <motion.div
+        style={{ y: useTransform(scrollYProgress, [0, 1], ["0%", "-30%"]) }}
+        className="absolute top-1/2 right-0 w-72 h-72 rounded-full bg-accent/5 blur-3xl -z-10"
+      />
+
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -50,11 +59,11 @@ const EventSection = () => {
           </p>
         </motion.div>
 
-        <div className="max-w-3xl mx-auto flex flex-col gap-6">
+        <motion.div style={{ y: cardsY }} className="max-w-3xl mx-auto flex flex-col gap-6">
           {events.map((event, i) => (
             <motion.div
               key={event.title}
-              initial={{ opacity: 0, x: -30 }}
+              initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.15 }}
               className="flex flex-col sm:flex-row sm:items-center gap-4 p-6 rounded-2xl bg-card shadow-card border border-border/50"
@@ -78,7 +87,7 @@ const EventSection = () => {
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
