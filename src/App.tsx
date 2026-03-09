@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import Index from "./pages/Index";
+import EventPage from "./pages/EventPage";
 import KebijakanPrivasi from "./pages/KebijakanPrivasi";
 import SyaratLayanan from "./pages/SyaratLayanan";
 import NotFound from "./pages/NotFound";
@@ -20,6 +21,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/event" element={<EventPage />} />
             <Route path="/kebijakan-privasi" element={<KebijakanPrivasi />} />
             <Route path="/syarat-layanan" element={<SyaratLayanan />} />
             <Route path="*" element={<NotFound />} />

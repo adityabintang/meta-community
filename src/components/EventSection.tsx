@@ -1,6 +1,7 @@
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { Calendar, MapPin, Users } from "lucide-react";
+import { Calendar, MapPin, Users, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations } from "@/i18n/translations";
 
@@ -12,7 +13,9 @@ const EventSection = () => {
 
   const cardsY = useTransform(scrollYProgress, [0, 1], ["6%", "-4%"]);
 
-  const attendees = [85, 92, null];
+  // Only show last 3 completed events on home
+  const completedEvents = translations.events.items.filter((e) => e.status.id === "Selesai");
+  const lastThree = completedEvents.slice(-3);
 
   return (
     <section id="event" className="py-24 md:py-32 relative overflow-hidden" ref={ref}>
@@ -40,7 +43,7 @@ const EventSection = () => {
         </motion.div>
 
         <motion.div style={{ y: cardsY }} className="max-w-3xl mx-auto flex flex-col gap-6">
-          {translations.events.items.map((event, i) => (
+          {lastThree.map((event, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
@@ -51,22 +54,35 @@ const EventSection = () => {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="font-display font-semibold text-foreground">{t(event.title)}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    event.status.id === "Selesai" ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"
-                  }`}>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-accent/10 text-accent">
                     {t(event.status)}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {t(event.date)}</span>
                   <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {t(event.location)}</span>
-                  {attendees[i] && (
-                    <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {attendees[i]} {t(translations.events.participants)}</span>
+                  {event.attendees && (
+                    <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {event.attendees} {t(translations.events.participants)}</span>
                   )}
                 </div>
               </div>
             </motion.div>
           ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="text-center mt-10"
+        >
+          <Link
+            to="/event"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-foreground font-medium hover:bg-secondary transition-colors"
+          >
+            {t(translations.events.viewAll)}
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </motion.div>
       </div>
     </section>
