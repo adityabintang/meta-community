@@ -20,10 +20,10 @@ const ProductPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const projects = [...translations.showcase.items];
+  const products = [...translations.showcase.items];
 
   const filtered = useMemo(() => {
-    let result = projects;
+    let result = products;
     if (selectedCategory !== "all") {
       result = result.filter((p) => p.categoryId === selectedCategory);
     }
@@ -110,9 +110,9 @@ const ProductPage = () => {
 
           {/* Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {filtered.map((project, i) => (
+            {filtered.map((product, i) => (
               <motion.div
-                key={project.id}
+                key={product.id}
                 initial={{ opacity: 0, y: 25 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: i * 0.06 }}
@@ -121,37 +121,35 @@ const ProductPage = () => {
                 {/* Thumbnail */}
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={project.image}
-                    alt={t(project.title)}
+                    src={product.image}
+                    alt={t(product.title)}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  {/* Category badge */}
                   <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-foreground text-xs font-medium">
-                    {t(project.category)}
+                    {t(product.category)}
                   </span>
                 </div>
 
                 {/* Content */}
                 <div className="p-5">
                   <h3 className="font-display font-bold text-foreground text-base mb-2 leading-snug line-clamp-1 group-hover:text-accent transition-colors">
-                    {t(project.title)}
+                    {t(product.title)}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
-                    {t(project.description)}
+                    {t(product.description)}
                   </p>
 
-                  {/* Author + CTA */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center">
                         <User className="w-3.5 h-3.5 text-muted-foreground" />
                       </div>
-                      <span className="text-xs text-muted-foreground font-medium">{project.author}</span>
+                      <span className="text-xs text-muted-foreground font-medium">{product.author}</span>
                     </div>
                     <button className="flex items-center gap-1.5 text-xs font-medium text-accent hover:underline transition-colors">
-                      {t(translations.showcase.viewProject)}
+                      {t(translations.showcase.viewProduct)}
                       <ExternalLink className="w-3 h-3" />
                     </button>
                   </div>
@@ -179,7 +177,7 @@ const ProductPage = () => {
               transition={{ delay: 0.5 }}
               className="text-center text-sm text-muted-foreground mt-10"
             >
-              {t(translations.showcase.showing)} {filtered.length} {t(translations.showcase.projectsText)}
+              {t(translations.showcase.showing)} {filtered.length} {t(translations.showcase.productsText)}
             </motion.p>
           )}
         </div>
