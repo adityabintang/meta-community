@@ -1,20 +1,23 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X, Sun, Moon, Globe } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { translations } from "@/i18n/translations";
 import logoLight from "@/assets/meta-logo-light.png";
 import logoDark from "@/assets/meta-logo-dark.png";
-
-const navItems = [
-  { label: "Home", href: "#home" },
-  { label: "Product", href: "#product" },
-  { label: "News", href: "#news" },
-  { label: "Event", href: "#event" },
-];
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const { language, toggleLanguage, t } = useLanguage();
+
+  const navItems = [
+    { label: t(translations.nav.home), href: "#home" },
+    { label: t(translations.nav.product), href: "#product" },
+    { label: t(translations.nav.news), href: "#news" },
+    { label: t(translations.nav.event), href: "#event" },
+  ];
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -68,7 +71,15 @@ const Header = () => {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2">
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground text-sm font-medium"
+            aria-label="Toggle language"
+          >
+            <Globe size={16} />
+            {language.toUpperCase()}
+          </button>
           <button
             onClick={toggleDark}
             className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
@@ -77,7 +88,7 @@ const Header = () => {
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           <a href="#home" className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
-            Bergabung
+            {t(translations.nav.join)}
           </a>
         </div>
 
@@ -109,13 +120,20 @@ const Header = () => {
               ))}
               <div className="flex items-center gap-3">
                 <button
+                  onClick={toggleLanguage}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground text-sm font-medium"
+                >
+                  <Globe size={16} />
+                  {language.toUpperCase()}
+                </button>
+                <button
                   onClick={toggleDark}
                   className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
                 >
                   {isDark ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
                 <a href="#home" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
-                  Bergabung
+                  {t(translations.nav.join)}
                 </a>
               </div>
             </nav>

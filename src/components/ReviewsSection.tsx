@@ -1,32 +1,14 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Star, Quote } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { translations } from "@/i18n/translations";
 
 const reviews = [
-  {
-    name: "Rina Pratiwi",
-    role: "Frontend Developer",
-    text: "Meta Community benar-benar mengubah cara saya belajar coding. Komunitasnya sangat suportif dan selalu siap membantu. Event-eventnya juga sangat berkualitas!",
-    rating: 5,
-  },
-  {
-    name: "Budi Santoso",
-    role: "UI/UX Designer",
-    text: "Sebagai non-coder, saya awalnya ragu untuk bergabung. Tapi ternyata Meta Community sangat terbuka dan inklusif. Sekarang saya banyak berkolaborasi dengan developer!",
-    rating: 5,
-  },
-  {
-    name: "Ahmad Fauzi",
-    role: "Mahasiswa IT",
-    text: "Dari pemula yang tidak tahu apa-apa, sekarang saya sudah bisa membangun project sendiri berkat sharing knowledge dari anggota Meta Community. Sangat recommended!",
-    rating: 5,
-  },
-  {
-    name: "Siti Nurhaliza",
-    role: "Project Manager",
-    text: "Networking di Meta Community luar biasa. Saya sudah menemukan banyak partner kolaborasi untuk berbagai project. Komunitas yang sangat profesional namun tetap hangat.",
-    rating: 5,
-  },
+  { name: "Rina Pratiwi", role: "Frontend Developer", text: "Meta Community benar-benar mengubah cara saya belajar coding. Komunitasnya sangat suportif dan selalu siap membantu. Event-eventnya juga sangat berkualitas!", rating: 5 },
+  { name: "Budi Santoso", role: "UI/UX Designer", text: "Sebagai non-coder, saya awalnya ragu untuk bergabung. Tapi ternyata Meta Community sangat terbuka dan inklusif. Sekarang saya banyak berkolaborasi dengan developer!", rating: 5 },
+  { name: "Ahmad Fauzi", role: "Mahasiswa IT", text: "Dari pemula yang tidak tahu apa-apa, sekarang saya sudah bisa membangun project sendiri berkat sharing knowledge dari anggota Meta Community. Sangat recommended!", rating: 5 },
+  { name: "Siti Nurhaliza", role: "Project Manager", text: "Networking di Meta Community luar biasa. Saya sudah menemukan banyak partner kolaborasi untuk berbagai project. Komunitas yang sangat profesional namun tetap hangat.", rating: 5 },
 ];
 
 const ReviewCard = ({ review }: { review: (typeof reviews)[0] }) => (
@@ -48,6 +30,7 @@ const ReviewCard = ({ review }: { review: (typeof reviews)[0] }) => (
 const ReviewsSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { t } = useLanguage();
 
   const row1 = [...reviews, ...reviews, ...reviews, ...reviews];
   const row2 = [...reviews.slice(2), ...reviews.slice(0, 2), ...reviews.slice(2), ...reviews.slice(0, 2), ...reviews.slice(2), ...reviews.slice(0, 2), ...reviews.slice(2), ...reviews.slice(0, 2)];
@@ -64,15 +47,14 @@ const ReviewsSection = () => {
           className="text-center mb-16"
         >
           <span className="inline-block px-4 py-1.5 rounded-full bg-secondary text-muted-foreground text-xs font-medium tracking-wider uppercase mb-4">
-            Testimoni
+            {t(translations.reviews.badge)}
           </span>
           <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
-            Apa Kata <span className="text-accent">Member</span> Kami
+            {t(translations.reviews.title1)} <span className="text-accent">{t(translations.reviews.titleAccent)}</span> {t(translations.reviews.title2)}
           </h2>
         </motion.div>
       </div>
 
-      {/* Row 1 - scroll left */}
       <div className="overflow-hidden mb-6">
         <div className="flex gap-6 animate-marquee hover:[animation-play-state:paused] w-max">
           {row1.map((review, i) => (
@@ -81,7 +63,6 @@ const ReviewsSection = () => {
         </div>
       </div>
 
-      {/* Row 2 - scroll right */}
       <div className="overflow-hidden">
         <div className="flex gap-6 animate-marquee-reverse hover:[animation-play-state:paused] w-max">
           {row2.map((review, i) => (
