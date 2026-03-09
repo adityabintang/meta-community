@@ -187,20 +187,13 @@ const LoginPage = () => {
           </div>
 
           {/* Social */}
-          <div className="grid grid-cols-2 gap-3">
+          <div>
             <button
               onClick={() => {}}
-              className="flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary/80 hover:shadow-card transition-all"
+              className="w-full flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary/80 hover:shadow-card transition-all"
             >
               <GoogleIcon />
               Google
-            </button>
-            <button
-              onClick={() => {}}
-              className="flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary/80 hover:shadow-card transition-all"
-            >
-              <GitHubIcon />
-              GitHub
             </button>
           </div>
 
