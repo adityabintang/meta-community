@@ -20,7 +20,7 @@ const ProductPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const projects = [...translations.showcase.items];
+  const products = [...translations.showcase.items];
 
   const filtered = useMemo(() => {
     let result = projects;
