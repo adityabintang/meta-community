@@ -65,7 +65,7 @@ const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 justify-center mb-20"
           >
-            <a href="#product" className="px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity">
+            <a href="https://chat.whatsapp.com/FWjeqZuUleW4s9wg4FnqXS" target="_blank" rel="noopener noreferrer" className="px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity">
               {t(translations.hero.cta1)}
             </a>
             <a href="#event" className="px-8 py-3.5 rounded-lg border border-border text-foreground font-medium hover:bg-secondary transition-colors">
