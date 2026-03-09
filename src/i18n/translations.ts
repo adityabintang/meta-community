@@ -184,6 +184,7 @@ export const translations = {
         status: { id: "Selesai", en: "Completed" },
         attendees: 92,
         gradient: "from-[hsl(330_60%_45%)] to-[hsl(280_50%_50%)]",
+        image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop",
         description: {
           id: "Workshop hands-on tentang dasar-dasar UI/UX design, mulai dari wireframing hingga prototyping menggunakan Figma.",
           en: "Hands-on workshop on UI/UX design fundamentals, from wireframing to prototyping using Figma.",
