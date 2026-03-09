@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
 import { MessageCircle, Camera, AtSign, BarChart3, Code2, Briefcase } from "lucide-react";
@@ -57,14 +57,19 @@ const tools = [
 const MetaToolsSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+
+  const bgOrbY1 = useTransform(scrollYProgress, [0, 1], ["0%", "-40%"]);
+  const bgOrbY2 = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
+  const gridY = useTransform(scrollYProgress, [0, 1], ["8%", "-4%"]);
 
   return (
     <section className="py-24 md:py-32 relative overflow-hidden" ref={ref}>
-      {/* Background gradient decoration */}
+      {/* Parallax background */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-0 right-0 h-full bg-gradient-to-b from-accent/5 via-transparent to-accent/5" />
-        <div className="absolute top-1/3 -right-32 w-96 h-96 rounded-full bg-accent/8 blur-3xl" />
-        <div className="absolute bottom-1/3 -left-32 w-80 h-80 rounded-full bg-primary/8 blur-3xl" />
+        <motion.div style={{ y: bgOrbY1 }} className="absolute top-1/3 -right-32 w-96 h-96 rounded-full bg-accent/8 blur-3xl" />
+        <motion.div style={{ y: bgOrbY2 }} className="absolute bottom-1/3 -left-32 w-80 h-80 rounded-full bg-primary/8 blur-3xl" />
       </div>
 
       <div className="container mx-auto px-6">
@@ -85,7 +90,7 @@ const MetaToolsSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <motion.div style={{ y: gridY }} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {tools.map((tool, i) => (
             <motion.div
               key={tool.title}
@@ -94,9 +99,7 @@ const MetaToolsSection = () => {
               transition={{ duration: 0.5, delay: i * 0.08 }}
               className="group relative p-6 rounded-2xl bg-card border border-border/50 shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden"
             >
-              {/* Gradient top bar */}
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${tool.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
-
               <div className={`w-12 h-12 rounded-xl ${tool.iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                 <tool.icon className={`w-6 h-6 ${tool.iconColor}`} />
               </div>
@@ -104,7 +107,7 @@ const MetaToolsSection = () => {
               <p className="text-sm text-muted-foreground leading-relaxed">{tool.description}</p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
 import { Code2, Handshake, GraduationCap, Globe } from "lucide-react";
@@ -29,14 +29,21 @@ const features = [
 const FeaturesSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+
+  const decorY = useTransform(scrollYProgress, [0, 1], ["0%", "-30%"]);
+  const cardsY = useTransform(scrollYProgress, [0, 1], ["5%", "-5%"]);
 
   return (
-    <section id="product" className="py-24 md:py-32 relative" ref={ref}>
-      {/* Gradient accent decoration */}
+    <section id="product" className="py-24 md:py-32 relative overflow-hidden" ref={ref}>
+      {/* Parallax gradient decorations */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        <motion.div style={{ y: decorY }} className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
+        <motion.div style={{ y: decorY }} className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
       </div>
+
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -55,7 +62,7 @@ const FeaturesSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <motion.div style={{ y: cardsY }} className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
@@ -71,7 +78,7 @@ const FeaturesSection = () => {
               <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
