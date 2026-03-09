@@ -17,7 +17,7 @@ const Header = () => {
     { label: t(translations.nav.home), href: "#home" },
     { label: t(translations.nav.product), href: "#product" },
     { label: t(translations.nav.news), href: "#news" },
-    { label: t(translations.nav.event), href: "#event" },
+    { label: t(translations.nav.event), href: "/event", isRoute: true },
   ];
 
   useEffect(() => {
