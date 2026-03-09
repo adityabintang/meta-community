@@ -4,6 +4,7 @@ import FeaturesSection from "@/components/FeaturesSection";
 import MetaToolsSection from "@/components/MetaToolsSection";
 import ReviewsSection from "@/components/ReviewsSection";
 import EventSection from "@/components/EventSection";
+import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -15,6 +16,7 @@ const Index = () => {
       <MetaToolsSection />
       <ReviewsSection />
       <EventSection />
+      <FAQSection />
       <Footer />
     </div>
   );
