@@ -121,15 +121,14 @@ const ProductPage = () => {
                 {/* Thumbnail */}
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={project.image}
-                    alt={t(project.title)}
+                    src={product.image}
+                    alt={t(product.title)}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  {/* Category badge */}
                   <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-foreground text-xs font-medium">
-                    {t(project.category)}
+                    {t(product.category)}
                   </span>
                 </div>
 
