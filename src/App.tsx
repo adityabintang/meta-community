@@ -25,6 +25,7 @@ const App = () => (
             <Route path="/event" element={<EventPage />} />
             <Route path="/kebijakan-privasi" element={<KebijakanPrivasi />} />
             <Route path="/syarat-layanan" element={<SyaratLayanan />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

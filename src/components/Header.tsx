@@ -161,9 +161,9 @@ const Header = () => {
                 >
                   {isDark ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
-                <a href="https://chat.whatsapp.com/FWjeqZuUleW4s9wg4FnqXS" target="_blank" rel="noopener noreferrer" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
+                <Link to="/login" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center" onClick={() => setMobileOpen(false)}>
                   {t(translations.nav.join)}
-                </a>
+                </Link>
               </div>
             </nav>
           </motion.div>
