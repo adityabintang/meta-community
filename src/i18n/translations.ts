@@ -199,6 +199,7 @@ export const translations = {
         status: { id: "Selesai", en: "Completed" },
         attendees: 78,
         gradient: "from-[hsl(142_50%_35%)] to-[hsl(170_60%_40%)]",
+        image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
         description: {
           id: "Sesi sharing tentang strategi digital marketing menggunakan Meta Ads, targeting audiens, dan optimasi campaign.",
           en: "Sharing session on digital marketing strategies using Meta Ads, audience targeting, and campaign optimization.",
