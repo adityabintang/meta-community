@@ -229,6 +229,7 @@ export const translations = {
         status: { id: "Segera", en: "Upcoming" },
         attendees: null,
         gradient: "from-[hsl(142_70%_35%)] to-[hsl(152_60%_45%)]",
+        image: "https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=600&h=400&fit=crop",
         description: {
           id: "Workshop praktis tentang cara mengintegrasikan WhatsApp Business API ke dalam aplikasi Anda untuk customer engagement.",
           en: "Practical workshop on integrating WhatsApp Business API into your application for customer engagement.",

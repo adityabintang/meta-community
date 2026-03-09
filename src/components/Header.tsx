@@ -161,9 +161,9 @@ const Header = () => {
                 >
                   {isDark ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
-                <a href="#home" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
+                <Link to={isHome ? "#home" : "/"} className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
                   {t(translations.nav.join)}
-                </a>
+                </Link>
               </div>
             </nav>
           </motion.div>

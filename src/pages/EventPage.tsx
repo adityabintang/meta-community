@@ -151,7 +151,8 @@ const EventPage = () => {
               >
                 {/* Banner */}
                 <div className={`relative overflow-hidden ${viewMode === "list" ? "sm:w-72 shrink-0 h-48 sm:h-auto" : "h-48"}`}>
-                  <div className={`absolute inset-0 bg-gradient-to-br ${event.gradient} opacity-90`} />
+                  <img src={event.image} alt={t(event.title)} className="absolute inset-0 w-full h-full object-cover" />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${event.gradient} opacity-60`} />
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_60%)]" />
                   {/* Category + Status badges */}
                   <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
