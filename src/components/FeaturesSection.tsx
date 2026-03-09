@@ -31,7 +31,12 @@ const FeaturesSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="product" className="py-24 md:py-32" ref={ref}>
+    <section id="product" className="py-24 md:py-32 relative" ref={ref}>
+      {/* Gradient accent decoration */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+      </div>
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

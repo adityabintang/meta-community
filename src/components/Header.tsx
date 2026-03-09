@@ -105,9 +105,17 @@ const Header = () => {
                   {item.label}
                 </a>
               ))}
-              <a href="#home" className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
-                Bergabung
-              </a>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleDark}
+                  className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
+                >
+                  {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+                <a href="#home" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center">
+                  Bergabung
+                </a>
+              </div>
             </nav>
           </motion.div>
         )}
