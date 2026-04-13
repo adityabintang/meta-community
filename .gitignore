@@ -8,6 +8,17 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+
+# Environment files and secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.crt
+*.secret
+secrets/
+
 dist
 dist-ssr
 *.local
