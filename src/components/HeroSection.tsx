@@ -1,37 +1,27 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Users, Calendar, Sparkles } from "lucide-react";
-import { useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations } from "@/i18n/translations";
 
 const HeroSection = () => {
-  const ref = useRef(null);
   const { t } = useLanguage();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-
-  const bgY1 = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const bgY2 = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
-  const bgY3 = useTransform(scrollYProgress, [0, 1], ["0%", "60%"]);
-  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const statsY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   const stats = [
-    { icon: Users, value: "160+", label: t(translations.hero.statMembers) },
+    { icon: Users, value: "190+", label: t(translations.hero.statMembers) },
     { icon: Calendar, value: "2+", label: t(translations.hero.statEvents) },
     { icon: Sparkles, value: "∞", label: t(translations.hero.statCollab) },
   ];
 
   return (
-    <section id="home" ref={ref} className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+    <section id="home" className="relative min-h-screen flex items-center pt-20 overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5" />
-        <motion.div style={{ y: bgY1 }} className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-accent/8 blur-3xl animate-float" />
-        <motion.div style={{ y: bgY2 }} className="absolute bottom-1/4 left-1/4 w-72 h-72 rounded-full bg-primary/8 blur-3xl animate-float" />
-        <motion.div style={{ y: bgY3 }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-accent/3 blur-[100px]" />
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-accent/8 blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 left-1/4 w-72 h-72 rounded-full bg-primary/8 blur-3xl animate-float" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-accent/3 blur-[100px]" />
       </div>
 
-      <motion.div style={{ y: textY, opacity }} className="container mx-auto px-6">
+      <motion.div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
             <span className="inline-block px-4 py-1.5 rounded-full bg-secondary text-muted-foreground text-xs font-medium tracking-wider uppercase mb-6">
@@ -74,7 +64,6 @@ const HeroSection = () => {
           </motion.div>
 
           <motion.div
-            style={{ y: statsY }}
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}

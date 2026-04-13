@@ -1,4 +1,4 @@
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Calendar, MapPin, Users, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -8,10 +8,7 @@ import { translations } from "@/i18n/translations";
 const EventSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const { t } = useLanguage();
-
-  const cardsY = useTransform(scrollYProgress, [0, 1], ["6%", "-4%"]);
 
   // Only show last 3 completed events on home
   const completedEvents = translations.events.items.filter((e) => e.status.id === "Selesai");
@@ -19,10 +16,7 @@ const EventSection = () => {
 
   return (
     <section id="event" className="py-24 md:py-32 relative overflow-hidden" ref={ref}>
-      <motion.div
-        style={{ y: useTransform(scrollYProgress, [0, 1], ["0%", "-30%"]) }}
-        className="absolute top-1/2 right-0 w-72 h-72 rounded-full bg-accent/5 blur-3xl -z-10"
-      />
+      <div className="absolute top-1/2 right-0 w-72 h-72 rounded-full bg-accent/5 blur-3xl -z-10" />
 
       <div className="container mx-auto px-6">
         <motion.div
@@ -42,7 +36,7 @@ const EventSection = () => {
           </p>
         </motion.div>
 
-        <motion.div style={{ y: cardsY }} className="max-w-3xl mx-auto flex flex-col gap-6">
+        <motion.div className="max-w-3xl mx-auto flex flex-col gap-6">
           {lastThree.map((event, i) => (
             <motion.div
               key={i}

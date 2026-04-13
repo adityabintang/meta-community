@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { MessageCircle, Camera, AtSign, BarChart3, Code2, Briefcase } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -16,19 +16,14 @@ const toolsMeta = [
 const MetaToolsSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const { t } = useLanguage();
-
-  const bgOrbY1 = useTransform(scrollYProgress, [0, 1], ["0%", "-40%"]);
-  const bgOrbY2 = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
-  const gridY = useTransform(scrollYProgress, [0, 1], ["8%", "-4%"]);
 
   return (
     <section className="py-24 md:py-32 relative overflow-hidden" ref={ref}>
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-0 right-0 h-full bg-gradient-to-b from-accent/5 via-transparent to-accent/5" />
-        <motion.div style={{ y: bgOrbY1 }} className="absolute top-1/3 -right-32 w-96 h-96 rounded-full bg-accent/8 blur-3xl" />
-        <motion.div style={{ y: bgOrbY2 }} className="absolute bottom-1/3 -left-32 w-80 h-80 rounded-full bg-primary/8 blur-3xl" />
+        <div className="absolute top-1/3 -right-32 w-96 h-96 rounded-full bg-accent/8 blur-3xl" />
+        <div className="absolute bottom-1/3 -left-32 w-80 h-80 rounded-full bg-primary/8 blur-3xl" />
       </div>
 
       <div className="container mx-auto px-6">
@@ -49,7 +44,7 @@ const MetaToolsSection = () => {
           </p>
         </motion.div>
 
-        <motion.div style={{ y: gridY }} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <motion.div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {translations.tools.items.map((tool, i) => {
             const meta = toolsMeta[i];
             return (

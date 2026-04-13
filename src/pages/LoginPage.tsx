@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { type FormEvent, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations } from "@/i18n/translations";
+import { toast } from "@/hooks/use-toast";
 import logoLight from "@/assets/meta-logo-light.png";
 import logoDark from "@/assets/meta-logo-dark.png";
 
@@ -19,12 +20,98 @@ const GoogleIcon = () => (
 const LoginPage = () => {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const isDark = document.documentElement.classList.contains("dark");
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
+      toast({
+        title: "Form belum lengkap",
+        description: "Email dan password wajib diisi.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (activeTab === "register" && password.length < 8) {
+      toast({
+        title: "Password terlalu pendek",
+        description: "Gunakan minimal 8 karakter.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const endpoint =
+      activeTab === "login" ? "/api/auth/sign-in/email" : "/api/auth/sign-up/email";
+
+    const payload =
+      activeTab === "login"
+        ? { email: normalizedEmail, password }
+        : { email: normalizedEmail, password, name: fullName.trim() || null };
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Autentikasi gagal");
+      }
+
+      if (activeTab === "login") {
+        localStorage.setItem("auth_token", data.token || "");
+        localStorage.setItem("auth_user", JSON.stringify(data.user || null));
+        if (rememberMe) {
+          localStorage.setItem("auth_remember_me", "1");
+        } else {
+          localStorage.removeItem("auth_remember_me");
+        }
+
+        toast({
+          title: "Berhasil masuk",
+          description: `Selamat datang, ${data.user?.email || normalizedEmail}`,
+        });
+        const redirectTo = searchParams.get("redirect");
+        navigate(redirectTo && redirectTo.startsWith("/") ? redirectTo : "/dashboard");
+        return;
+      }
+
+      setActiveTab("login");
+      setPassword("");
+      toast({
+        title: "Akun berhasil dibuat",
+        description: "Silakan login dengan email dan password kamu.",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Autentikasi gagal";
+      toast({
+        title: "Autentikasi gagal",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-background">
@@ -110,7 +197,7 @@ const LoginPage = () => {
           </p>
 
           {/* Form */}
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {activeTab === "register" && (
               <div className="relative">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -120,6 +207,8 @@ const LoginPage = () => {
                 <input
                   type="text"
                   placeholder={t(translations.login.fullName)}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
                 />
               </div>
@@ -173,9 +262,14 @@ const LoginPage = () => {
 
             <button
               type="submit"
+              disabled={isSubmitting}
               className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium hover:opacity-90 transition-opacity shadow-card"
             >
-              {activeTab === "login" ? t(translations.login.signIn) : t(translations.login.signUp)}
+              {isSubmitting
+                ? "Memproses..."
+                : activeTab === "login"
+                  ? t(translations.login.signIn)
+                  : t(translations.login.signUp)}
             </button>
           </form>
 

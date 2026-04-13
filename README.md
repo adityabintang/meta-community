@@ -71,3 +71,21 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Cloudflare D1 Auth Setup
+
+Email/password auth now uses a custom auth server backed by Cloudflare D1.
+
+1. Fill D1 variables in `.env.local`:
+	- `CLOUDFLARE_ACCOUNT_ID`
+	- `CLOUDFLARE_D1_DATABASE_ID`
+	- `CLOUDFLARE_D1_API_TOKEN`
+	- `AUTH_JWT_SECRET`
+2. Start frontend:
+	- `npm run dev`
+3. Start auth server:
+	- `npm run auth:dev`
+
+Auth endpoints handled by the auth server:
+- `POST /api/auth/sign-up/email`
+- `POST /api/auth/sign-in/email`

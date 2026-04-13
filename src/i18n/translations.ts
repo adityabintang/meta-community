@@ -33,8 +33,8 @@ export const translations = {
     title1: { id: "Dibangun untuk", en: "Built for" },
     titleAccent: { id: "Komunitas", en: "Community" },
     subtitle: {
-      id: "Lebih dari 160 member dari semua kalangan yang tergabung dalam ekosistem Meta Community.",
-      en: "More than 160 members from all backgrounds joined in the Meta Community ecosystem.",
+      id: "Lebih dari 190 member dari semua kalangan yang tergabung dalam ekosistem Meta Community.",
+      en: "More than 190 members from all backgrounds joined in the Meta Community ecosystem.",
     },
     items: [
       {

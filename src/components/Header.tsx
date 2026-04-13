@@ -1,11 +1,21 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sun, Moon, Globe } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Menu, X, Sun, Moon, Globe, LayoutDashboard, LogOut, User } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations } from "@/i18n/translations";
 import logoLight from "@/assets/meta-logo-light.png";
 import logoDark from "@/assets/meta-logo-dark.png";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -13,12 +23,35 @@ const Header = () => {
   const [isDark, setIsDark] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const isHome = location.pathname === "/";
+
+  const getUserFromStorage = () => {
+    try {
+      const userStr = localStorage.getItem("auth_user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const user = getUserFromStorage();
+  const isLoggedIn = !!user;
+  const userInitials = user?.name
+    ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase()
+    : user?.email?.[0]?.toUpperCase() || "U";
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_user");
+    localStorage.removeItem("auth_remember_me");
+    navigate("/");
+  };
 
   const navItems = [
     { label: t(translations.nav.home), href: "#home" },
     { label: t(translations.nav.product), href: "/product", isRoute: true },
-    { label: t(translations.nav.news), href: "#news" },
+    { label: t(translations.nav.news), href: "/news", isRoute: true },
     { label: t(translations.nav.event), href: "/event", isRoute: true },
   ];
 
@@ -103,9 +136,49 @@ const Header = () => {
           >
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <Link to="/login" className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
-            {t(translations.nav.join)}
-          </Link>
+          {isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary transition-colors">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="text-sm">{userInitials}</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span>{user?.name || user?.email}</span>
+                    <span className="text-xs text-muted-foreground font-normal capitalize">
+                      {user?.role || "member"}
+                    </span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard" className="flex items-center">
+                    <LayoutDashboard className="mr-2" size={16} />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard/profile" className="flex items-center">
+                    <User className="mr-2" size={16} />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-500">
+                  <LogOut className="mr-2" size={16} />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/login" className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+              {t(translations.nav.join)}
+            </Link>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -161,9 +234,20 @@ const Header = () => {
                 >
                   {isDark ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
-                <Link to="/login" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center" onClick={() => setMobileOpen(false)}>
-                  {t(translations.nav.join)}
-                </Link>
+                {isLoggedIn ? (
+                  <>
+                    <Link to="/dashboard" className="flex-1 px-5 py-2.5 rounded-lg bg-secondary text-sm font-medium text-center" onClick={() => setMobileOpen(false)}>
+                      Dashboard
+                    </Link>
+                    <button onClick={handleLogout} className="px-5 py-2.5 rounded-lg bg-red-500 text-white text-sm font-medium">
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link to="/login" className="flex-1 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium text-center" onClick={() => setMobileOpen(false)}>
+                    {t(translations.nav.join)}
+                  </Link>
+                )}
               </div>
             </nav>
           </motion.div>
