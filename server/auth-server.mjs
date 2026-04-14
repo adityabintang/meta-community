@@ -235,6 +235,15 @@ function getStatusFilterFromWhere(urlParams) {
     if (equalsStatus === "published" || equalsStatus === "draft") {
       return equalsStatus;
     }
+
+    const notEqualsStatus = where?.status?.not_equals;
+    if (notEqualsStatus === "draft") {
+      return "published";
+    }
+
+    if (notEqualsStatus === "published") {
+      return "draft";
+    }
   } catch {
     return null;
   }
@@ -969,6 +978,8 @@ async function getEvents(req, res, urlParams) {
     const offset = (page - 1) * limit;
     const columns = await getTableColumns("events");
     const requestUser = getRequestUser(req);
+    const statusFilterFromWhere = getStatusFilterFromWhere(urlParams);
+    const isAdmin = requestUser?.role === "admin";
     const isMember = requestUser?.role === "member";
     const ownershipFilter = isMember ? getOwnershipFilter(columns, requestUser) : null;
 
@@ -985,8 +996,23 @@ async function getEvents(req, res, urlParams) {
       return;
     }
 
-    const whereClause = ownershipFilter ? `WHERE ${ownershipFilter.clause}` : "";
-    const whereParams = ownershipFilter ? ownershipFilter.params : [];
+    const whereParts = [];
+    const whereParams = [];
+
+    if (statusFilterFromWhere) {
+      whereParts.push("status = ?");
+      whereParams.push(statusFilterFromWhere);
+    } else if (!isAdmin) {
+      whereParts.push("status = ?");
+      whereParams.push("published");
+    }
+
+    if (ownershipFilter) {
+      whereParts.push(ownershipFilter.clause);
+      whereParams.push(...ownershipFilter.params);
+    }
+
+    const whereClause = whereParts.length > 0 ? `WHERE ${whereParts.join(" AND ")}` : "";
     const rows = await d1Query(
       `SELECT * FROM events ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
       [...whereParams, limit, offset]
@@ -4091,6 +4117,362 @@ async function uploadImage(req, res) {
   }
 }
 
+function decodeHtmlEntities(value) {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+}
+
+function stripHtml(value) {
+  if (typeof value !== "string") return "";
+  
+  // Replace block-level elements and br tags with newlines to preserve structure
+  let text = value
+    .replace(/<\/(p|div|br|h[1-6]|li|blockquote)>/gi, "\n")
+    .replace(/<(p|div|br|h[1-6]|li|blockquote)[^>]*>/gi, "\n");
+  
+  // Remove all other HTML tags
+  text = text.replace(/<[^>]*>/g, "");
+  
+  // Decode HTML entities
+  text = decodeHtmlEntities(text);
+  
+  // Clean up excessive whitespace while preserving intentional spacing and line breaks
+  // Replace multiple consecutive spaces with single space, but preserve line breaks
+  text = text
+    .split("\n")
+    .map(line => line.replace(/\s+/g, " ").trim())
+    .filter(line => line.length > 0)
+    .join("\n");
+  
+  return text.trim();
+}
+
+function extractMetaContent(html, key) {
+  const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const patterns = [
+    new RegExp(`<meta[^>]+property=["']${escapedKey}["'][^>]+content=["']([^"']+)["'][^>]*>`, "i"),
+    new RegExp(`<meta[^>]+name=["']${escapedKey}["'][^>]+content=["']([^"']+)["'][^>]*>`, "i"),
+    new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${escapedKey}["'][^>]*>`, "i"),
+    new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${escapedKey}["'][^>]*>`, "i"),
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match?.[1]) return decodeHtmlEntities(match[1]);
+  }
+
+  return "";
+}
+
+function normalizeDateValue(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
+  const raw = value.trim();
+  const date = new Date(raw);
+  if (!Number.isNaN(date.getTime())) return date.toISOString();
+  return raw;
+}
+
+function pickImageValue(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value.trim();
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const picked = pickImageValue(item);
+      if (picked) return picked;
+    }
+    return "";
+  }
+
+  if (typeof value === "object") {
+    if (typeof value.url === "string" && value.url.trim()) return value.url.trim();
+    if (typeof value.contentUrl === "string" && value.contentUrl.trim()) return value.contentUrl.trim();
+  }
+
+  return "";
+}
+
+function pickEventPayload(node) {
+  if (!node) return null;
+
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const picked = pickEventPayload(item);
+      if (picked) return picked;
+    }
+    return null;
+  }
+
+  if (typeof node === "object") {
+    const maybeName = node.name || node.title;
+    const maybeStart =
+      node.startDate || node.start_date || node.startAt || node.start_at || node.event?.startAt;
+    const maybeEnd =
+      node.endDate || node.end_date || node.endAt || node.end_at || node.event?.endAt;
+
+    if (typeof maybeName === "string" && (maybeStart || maybeEnd)) {
+      return node;
+    }
+
+    for (const value of Object.values(node)) {
+      const picked = pickEventPayload(value);
+      if (picked) return picked;
+    }
+  }
+
+  return null;
+}
+
+function extractEventDataFromJsonLd(html) {
+  const scriptRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+
+  while ((match = scriptRegex.exec(html))) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      const payload = pickEventPayload(parsed);
+      if (!payload) continue;
+
+      return {
+        title: typeof payload.name === "string" ? payload.name.trim() : "",
+        description:
+          typeof payload.description === "string" ? stripHtml(payload.description) : "",
+        startAt: normalizeDateValue(
+          payload.startDate || payload.start_date || payload.startAt || payload.start_at || "",
+        ),
+        endAt: normalizeDateValue(
+          payload.endDate || payload.end_date || payload.endAt || payload.end_at || "",
+        ),
+        thumbnail: pickImageValue(payload.image || payload.thumbnail || payload.logo),
+      };
+    } catch {
+      // Ignore invalid JSON-LD blocks.
+    }
+  }
+
+  return null;
+}
+
+function extractLooseDate(html, key) {
+  const pattern = new RegExp(`"${key}"\\s*:\\s*"([^"\\n]+)"`, "i");
+  const match = html.match(pattern);
+  return normalizeDateValue(match?.[1] || "");
+}
+
+function extractTitleFromHtml(html) {
+  return decodeHtmlEntities((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "").replace(/\s+/g, " ").trim());
+}
+
+function pickFirstString(...values) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return "";
+}
+
+function detectEventSource(parsedUrl, html) {
+  const hostname = parsedUrl.hostname.toLowerCase();
+  const htmlLower = html.toLowerCase();
+  const siteName = pickFirstString(
+    extractMetaContent(html, "og:site_name"),
+    extractMetaContent(html, "twitter:site"),
+    extractMetaContent(html, "application-name"),
+  ).toLowerCase();
+
+  if (
+    hostname.includes("eventbrite.") ||
+    siteName.includes("eventbrite") ||
+    htmlLower.includes("eventbrite")
+  ) {
+    return "eventbrite";
+  }
+
+  if (
+    hostname.includes("meetup.") ||
+    siteName.includes("meetup") ||
+    htmlLower.includes("meetup")
+  ) {
+    return "meetup";
+  }
+
+  if (
+    hostname.endsWith("luma.com") ||
+    hostname === "luma.com" ||
+    hostname.endsWith("lu.ma") ||
+    siteName.includes("luma") ||
+    siteName.includes("lu.ma") ||
+    htmlLower.includes("luma") ||
+    htmlLower.includes("lu.ma")
+  ) {
+    return "luma";
+  }
+
+  return "generic";
+}
+
+function extractEventDataWithAdapter(html, parsedUrl, adapterName) {
+  const jsonLdData = extractEventDataFromJsonLd(html);
+  const titleFromTitleTag = extractTitleFromHtml(html);
+
+  const titleMetaKeys = ["og:title", "twitter:title"];
+  const descriptionMetaKeys = ["description", "og:description", "twitter:description"];
+  const startMetaKeys = ["event:start_time", "event:start_date"];
+  const endMetaKeys = ["event:end_time", "event:end_date"];
+  const imageMetaKeys = ["og:image", "og:image:secure_url", "twitter:image", "twitter:image:src"];
+
+  if (adapterName === "eventbrite") {
+    imageMetaKeys.unshift("og:image:secure_url");
+  }
+
+  if (adapterName === "meetup") {
+    descriptionMetaKeys.unshift("og:description");
+  }
+
+  const title = pickFirstString(
+    jsonLdData?.title,
+    ...titleMetaKeys.map((key) => extractMetaContent(html, key)),
+    titleFromTitleTag,
+  );
+
+  const description = pickFirstString(
+    jsonLdData?.description,
+    ...descriptionMetaKeys.map((key) => extractMetaContent(html, key)),
+  );
+
+  const startAt = pickFirstString(
+    jsonLdData?.startAt,
+    ...startMetaKeys.map((key) => extractMetaContent(html, key)),
+    extractLooseDate(html, "start_at"),
+    extractLooseDate(html, "startAt"),
+    extractLooseDate(html, "startDate"),
+  );
+
+  const endAt = pickFirstString(
+    jsonLdData?.endAt,
+    ...endMetaKeys.map((key) => extractMetaContent(html, key)),
+    extractLooseDate(html, "end_at"),
+    extractLooseDate(html, "endAt"),
+    extractLooseDate(html, "endDate"),
+  );
+
+  const thumbnailRaw = pickFirstString(
+    jsonLdData?.thumbnail,
+    ...imageMetaKeys.map((key) => extractMetaContent(html, key)),
+  );
+
+  let thumbnail = "";
+  if (thumbnailRaw) {
+    try {
+      thumbnail = new URL(thumbnailRaw, parsedUrl).toString();
+    } catch {
+      thumbnail = thumbnailRaw;
+    }
+  }
+
+  return {
+    title: title || "",
+    description: description || "",
+    startAt: normalizeDateValue(startAt),
+    endAt: normalizeDateValue(endAt),
+    thumbnail,
+  };
+}
+
+async function scrapeEventFromUrl(req, res) {
+  const user = getRequestUser(req);
+  if (!user) {
+    sendJson(res, 401, {
+      error: "unauthorized",
+      message: "Unauthorized",
+    });
+    return;
+  }
+
+  try {
+    const body = await readJsonBody(req);
+    const sourceUrl = typeof body.url === "string" ? body.url.trim() : "";
+
+    if (!sourceUrl) {
+      sendJson(res, 400, {
+        error: "invalid_request",
+        message: "URL is required",
+      });
+      return;
+    }
+
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(sourceUrl);
+    } catch {
+      sendJson(res, 400, {
+        error: "invalid_request",
+        message: "Invalid URL format",
+      });
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+
+    let html = "";
+    try {
+      const response = await fetch(parsedUrl.toString(), {
+        method: "GET",
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "MetaCommunityEventScraper/1.0",
+          Accept: "text/html,application/xhtml+xml",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch source page (HTTP ${response.status})`);
+      }
+
+      html = await response.text();
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    const adapterName = detectEventSource(parsedUrl, html);
+
+    const eventData = extractEventDataWithAdapter(html, parsedUrl, adapterName);
+
+    if (!eventData.title && !eventData.description && !eventData.startAt && !eventData.endAt && !eventData.thumbnail) {
+      sendJson(res, 422, {
+        error: "scrape_failed",
+        message: "Unable to extract event details from this link",
+      });
+      return;
+    }
+
+    sendJson(res, 200, {
+      ok: true,
+      data: {
+        ...eventData,
+        platform: adapterName,
+      },
+    });
+  } catch (error) {
+    console.error("[auth-server] Event scrape failed:", error);
+    sendJson(res, 500, {
+      error: "scrape_failed",
+      message: error?.name === "AbortError" ? "Scrape request timed out" : error.message,
+    });
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   setCorsHeaders(req, res);
 
@@ -4198,6 +4580,11 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "POST" && requestUrl.pathname === "/api/events") {
       await createEvent(req, res);
+      return;
+    }
+
+    if (req.method === "POST" && requestUrl.pathname === "/api/events/scrape") {
+      await scrapeEventFromUrl(req, res);
       return;
     }
 

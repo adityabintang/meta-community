@@ -138,8 +138,8 @@ export const translations = {
     title1: { id: "Event", en: "Latest" },
     titleAccent: { id: "Terbaru", en: "Events" },
     subtitle: {
-      id: "Sudah ada 2+ event yang telah diselenggarakan oleh Meta Community.",
-      en: "Over 2+ events have been organized by Meta Community.",
+      id: "Sudah ada event yang telah diselenggarakan oleh Meta Community.",
+      en: "Meta Community has organized events already.",
     },
     viewAll: { id: "Lihat Semua Event", en: "View All Events" },
     pageTitle1: { id: "Event", en: "Events at" },

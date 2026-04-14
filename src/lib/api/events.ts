@@ -68,7 +68,7 @@ export const eventsApi = {
     return apiClient.get<PayloadResponse<Event>>("/events", {
       sort: "-date",
       depth: 1,
-      where: { status: { equals: "published" } },
+      where: { status: { not_equals: "draft" } },
       ...params,
     });
   },

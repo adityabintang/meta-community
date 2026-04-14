@@ -48,8 +48,6 @@ interface Event {
   locationType?: LocationType;
   locationLink?: string;
   thumbnail?: string | null;
-  embedLink?: string | null;
-  isEmbedOnly?: boolean;
   status: "draft" | "published";
 }
 
@@ -60,6 +58,8 @@ export default function EventsPage() {
   const [editingEventId, setEditingEventId] = useState<string | number | null>(null);
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isScraping, setIsScraping] = useState(false);
+  const [sourceLink, setSourceLink] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     category: "general",
@@ -69,8 +69,6 @@ export default function EventsPage() {
     endAt: "",
     locationType: "zoom" as LocationType,
     locationLink: "",
-    embeddedEventLink: "",
-    isEmbedOnly: false,
     status: "draft" as "draft" | "published",
   });
 
@@ -155,20 +153,87 @@ export default function EventsPage() {
       endAt: "",
       locationType: "zoom",
       locationLink: "",
-      embeddedEventLink: "",
-      isEmbedOnly: false,
       status: "draft",
     });
+    setSourceLink("");
     setEditingEventId(null);
   };
 
   const toDateTimeLocalValue = (value?: string) => {
     if (!value) return "";
-    const normalized = value.replace(" ", "T");
-    if (normalized.includes("T")) {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      const pad = (input: number) => String(input).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    const normalized = value.replace(" ", "T").trim();
+    if (normalized.includes("T") && normalized.length >= 16) {
       return normalized.slice(0, 16);
     }
-    return `${normalized.slice(0, 10)}T00:00`;
+
+    if (normalized.length >= 10) {
+      return `${normalized.slice(0, 10)}T00:00`;
+    }
+
+    return "";
+  };
+
+  const handleScrapeEventInfo = async () => {
+    const url = sourceLink.trim();
+    if (!url) {
+      toast({ title: "Event source URL is required", variant: "destructive" });
+      return;
+    }
+
+    try {
+      new URL(url);
+    } catch {
+      toast({ title: "Invalid source URL", variant: "destructive" });
+      return;
+    }
+
+    setIsScraping(true);
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${CMS_API}/events/scrape`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ url }),
+      });
+
+      const payload = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(payload?.message || "Failed to scrape event details");
+      }
+
+      const data = payload?.data || {};
+      setFormData((prev) => ({
+        ...prev,
+        title: data.title || prev.title,
+        description: data.description || prev.description,
+        startAt: data.startAt ? toDateTimeLocalValue(data.startAt) : prev.startAt,
+        endAt: data.endAt ? toDateTimeLocalValue(data.endAt) : prev.endAt,
+        thumbnail: data.thumbnail || prev.thumbnail,
+      }));
+
+      toast({ title: "Event info imported" });
+    } catch (error) {
+      toast({
+        title: "Failed to import event info",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScraping(false);
+    }
   };
 
   const inferLocationType = (event: Event): LocationType => {
@@ -192,8 +257,6 @@ export default function EventsPage() {
       endAt: toDateTimeLocalValue(event.endAt),
       locationType: inferLocationType(event),
       locationLink: event.locationLink || event.location || "",
-      embeddedEventLink: event.embedLink || "",
-      isEmbedOnly: Boolean(event.isEmbedOnly),
       status: event.status || "draft",
     });
     setDialogOpen(true);
@@ -231,15 +294,6 @@ export default function EventsPage() {
       return;
     }
 
-    if (formData.embeddedEventLink.trim()) {
-      try {
-        new URL(formData.embeddedEventLink.trim());
-      } catch {
-        toast({ title: "Embedded event link is invalid", variant: "destructive" });
-        return;
-      }
-    }
-
     setIsSubmitting(true);
     try {
       const isEditMode = editingEventId !== null;
@@ -260,8 +314,6 @@ export default function EventsPage() {
           endAt: formData.endAt,
           locationType: formData.locationType,
           locationLink: formData.locationLink,
-          embeddedEventLink: formData.embeddedEventLink,
-          isEmbedOnly: formData.isEmbedOnly,
           status: formData.status,
         }),
       });
@@ -329,11 +381,43 @@ export default function EventsPage() {
               <DialogHeader>
                 <DialogTitle>{editingEventId !== null ? "Edit Event" : "Create New Event"}</DialogTitle>
                 <DialogDescription>
-                  Upload thumbnail, set event schedule, choose Zoom/Google Meet location, add description, and optional embedded event link.
+                  Upload thumbnail, set event schedule, choose Zoom/Google Meet location, and add description.
                 </DialogDescription>
               </DialogHeader>
 
               <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="sourceLink">Import from Event URL</Label>
+                  <div className="flex flex-col gap-2 md:flex-row">
+                    <Input
+                      id="sourceLink"
+                      type="url"
+                      value={sourceLink}
+                      onChange={(e) => setSourceLink(e.target.value)}
+                      placeholder="Paste an event link"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isScraping}
+                      onClick={handleScrapeEventInfo}
+                      className="md:w-52"
+                    >
+                      {isScraping ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Mengambil...
+                        </>
+                      ) : (
+                        "Tampilkan informasi"
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Supports popular event pages like Luma, Eventbrite, and Meetup.
+                  </p>
+                </div>
+
                 <div className="grid gap-2">
                   <Label>Thumbnail</Label>
                   <div className="flex items-center gap-3">
@@ -473,27 +557,6 @@ export default function EventsPage() {
                     onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                     rows={4}
                   />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="embeddedEventLink">Embed Link Event Lain (Optional)</Label>
-                  <Input
-                    id="embeddedEventLink"
-                    type="url"
-                    value={formData.embeddedEventLink}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, embeddedEventLink: e.target.value }))}
-                    placeholder="https://other-platform.com/event/embed/..."
-                  />
-                  <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={formData.isEmbedOnly}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, isEmbedOnly: e.target.checked }))
-                      }
-                    />
-                    Event ini hanya sebagai penampung untuk embedded event link.
-                  </label>
                 </div>
 
                 <div className="grid gap-2">

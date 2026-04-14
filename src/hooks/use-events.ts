@@ -21,6 +21,16 @@ export function usePublishedEvents() {
   });
 }
 
+export function usePublishedEventCount() {
+  return useQuery({
+    queryKey: ["events", "published", "count"],
+    queryFn: async () => {
+      const res = await eventsApi.getPublished({ limit: 1 });
+      return res.totalDocs;
+    },
+  });
+}
+
 export function useEvent(id: number | string | undefined) {
   return useQuery({
     queryKey: ["events", id],

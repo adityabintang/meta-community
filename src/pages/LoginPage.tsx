@@ -28,7 +28,6 @@ const LoginPage = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
   const isDark = document.documentElement.classList.contains("dark");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

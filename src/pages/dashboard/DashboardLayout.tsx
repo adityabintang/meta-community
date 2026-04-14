@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,6 +18,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import logoLight from "@/assets/meta-logo-light.png";
+import logoDark from "@/assets/meta-logo-dark.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,6 +65,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     localStorage.setItem("theme", next ? "dark" : "light");
   };
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+  }, [isDark]);
+
   const getUserFromStorage = () => {
     try {
       const userStr = localStorage.getItem("auth_user");
@@ -101,7 +107,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         >
           <Menu size={24} />
         </button>
-        <span className="font-semibold">Meta Community CMS</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <img
+            src={isDark ? logoDark : logoLight}
+            alt="Meta Community"
+            className="h-7 w-7 object-contain"
+          />
+          <span className="font-semibold truncate">Meta Community</span>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="p-2 rounded-full hover:bg-secondary">
@@ -194,7 +207,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-border">
           {sidebarOpen && (
-            <span className="font-semibold text-lg truncate">Meta CMS</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <img
+                src={isDark ? logoDark : logoLight}
+                alt="Meta Community"
+                className="h-8 w-8 object-contain"
+              />
+              <span className="font-semibold text-lg truncate">Meta Community</span>
+            </div>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Trash2, Play, Pencil, Search, Download, Share2 } from "lucide-react";
+import { Plus, Trash2, Play, Pencil, Search, Share2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -120,6 +120,38 @@ export default function RecordingsPage() {
     return speakers.map((speaker) => speaker.trim()).filter(Boolean);
   };
 
+  const copyToClipboard = async (value: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+        return true;
+      }
+    } catch {
+      // Fall through to legacy fallback.
+    }
+
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      textarea.style.pointerEvents = "none";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const copied = document.execCommand("copy");
+      document.body.removeChild(textarea);
+      return copied;
+    } catch {
+      return false;
+    }
+  };
+
+  const getRecordingDetailUrl = (id: string | number) => {
+    return `${window.location.origin}/dashboard/recordings/${encodeURIComponent(String(id))}`;
+  };
+
   const allCategories = useMemo(() => {
     return Array.from(
       new Set(
@@ -237,7 +269,7 @@ export default function RecordingsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 2xl:grid-cols-2">
           {filteredRecordings.map((recording) => {
             const speakers = normalizeSpeakers(recording.speakers);
             return (
@@ -247,7 +279,7 @@ export default function RecordingsPage() {
                 onClick={() => navigate(`/dashboard/recordings/${recording.id}`)}
               >
                 <CardContent className="p-4">
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-[280px_1fr]">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-[280px_minmax(0,1fr)]">
                     <div className="relative overflow-hidden rounded-lg border bg-muted">
                       <img
                         src={getThumbnail(recording)}
@@ -261,7 +293,7 @@ export default function RecordingsPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="min-w-0 space-y-3">
                       <div>
                         <h3 className="line-clamp-2 text-3xl font-bold tracking-tight md:text-4xl">
                           {recording.title}
@@ -309,24 +341,12 @@ export default function RecordingsPage() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(recording.youtubeLink, "_blank", "noopener,noreferrer");
-                            }}
-                          >
-                            <Download className="mr-2 h-4 w-4" />
-                            Download
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
                             onClick={async (e) => {
                               e.stopPropagation();
-                              try {
-                                await navigator.clipboard.writeText(recording.youtubeLink);
+                              const copied = await copyToClipboard(getRecordingDetailUrl(recording.id));
+                              if (copied) {
                                 toast({ title: "Link copied" });
-                              } catch {
+                              } else {
                                 toast({ title: "Failed to copy link", variant: "destructive" });
                               }
                             }}

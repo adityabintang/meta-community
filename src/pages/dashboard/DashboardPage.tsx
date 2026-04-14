@@ -8,7 +8,6 @@ import {
   Video,
   FileText,
   Users,
-  ArrowUpRight,
   Plus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -216,16 +215,6 @@ export default function DashboardPage() {
             Welcome back, {user?.name || user?.email}
           </p>
         </div>
-        {isAdmin && (
-          <div className="flex gap-2">
-            <Button asChild>
-              <Link to="/admin" target="_blank">
-                Open Admin Panel
-                <ArrowUpRight className="ml-2" size={16} />
-              </Link>
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* Stats Cards */}

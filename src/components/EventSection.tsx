@@ -4,14 +4,20 @@ import { Calendar, MapPin, Users, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations } from "@/i18n/translations";
+import { usePublishedEventCount } from "@/hooks/use-events";
 
 const EventSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { data: publishedEventCount = 0 } = usePublishedEventCount();
+  const eventSummary =
+    language === "id"
+      ? `Sudah ada ${publishedEventCount} event yang telah diselenggarakan oleh Meta Community.`
+      : `Meta Community has organized ${publishedEventCount} events so far.`;
 
   // Only show last 3 completed events on home
-  const completedEvents = translations.events.items.filter((e) => e.status.id === "Selesai");
+  const completedEvents = translations.events.items.filter((e) => e.status.id === translations.events.completed.id);
   const lastThree = completedEvents.slice(-3);
 
   return (
@@ -32,7 +38,7 @@ const EventSection = () => {
             {t(translations.events.title1)} <span className="text-accent">{t(translations.events.titleAccent)}</span>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            {t(translations.events.subtitle)}
+            {eventSummary}
           </p>
         </motion.div>
 

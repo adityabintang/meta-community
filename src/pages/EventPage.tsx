@@ -90,11 +90,18 @@ const EventPage = () => {
   const { data: publishedEvents = [], isLoading, error } = usePublishedEvents();
   const token = localStorage.getItem("auth_token");
 
+  const isPublicEvent = (event: Event) => {
+    const status = typeof event.status === "string" ? event.status.toLowerCase().trim() : "";
+    return status !== "draft";
+  };
+
   const allEvents = useMemo(() => {
-    return publishedEvents.map((event) => ({
-      ...event,
-      coverImage: getMediaUrl(event.thumbnail || event.image),
-    }));
+    return publishedEvents
+      .filter(isPublicEvent)
+      .map((event) => ({
+        ...event,
+        coverImage: getMediaUrl(event.thumbnail || event.image),
+      }));
   }, [publishedEvents]);
 
   const categories = useMemo(() => {
