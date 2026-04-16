@@ -2,11 +2,14 @@ import { type FormEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { signInWithPopup } from "firebase/auth";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations } from "@/i18n/translations";
 import { toast } from "@/hooks/use-toast";
 import logoLight from "@/assets/meta-logo-light.png";
 import logoDark from "@/assets/meta-logo-dark.png";
+import { firebaseAuth, googleAuthProvider } from "@/lib/firebase";
+import { setAuthSession } from "@/lib/auth-session";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24">
@@ -25,10 +28,73 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isDark = document.documentElement.classList.contains("dark");
+
+  const navigateAfterLogin = () => {
+    const redirectTo = searchParams.get("redirect");
+    navigate(redirectTo && redirectTo.startsWith("/") ? redirectTo : "/dashboard");
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsGoogleSubmitting(true);
+
+      const credential = await signInWithPopup(firebaseAuth, googleAuthProvider);
+      const idToken = await credential.user.getIdToken();
+
+      const response = await fetch("/api/auth/sign-in/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.message || "Google sign-in gagal");
+      }
+
+      setAuthSession({
+        token: data?.token || "",
+        user: data?.user || null,
+        rememberMe: true,
+      });
+
+      toast({
+        title: "Berhasil masuk",
+        description: `Selamat datang, ${data?.user?.email || credential.user.email || "member"}`,
+      });
+      navigateAfterLogin();
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String((error as { code?: string }).code)
+          : "";
+
+      if (code === "auth/popup-closed-by-user") {
+        toast({
+          title: "Login dibatalkan",
+          description: "Popup login Google ditutup sebelum selesai.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : "Google sign-in gagal";
+      toast({
+        title: "Google sign-in gagal",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,20 +143,13 @@ const LoginPage = () => {
       }
 
       if (activeTab === "login") {
-        localStorage.setItem("auth_token", data.token || "");
-        localStorage.setItem("auth_user", JSON.stringify(data.user || null));
-        if (rememberMe) {
-          localStorage.setItem("auth_remember_me", "1");
-        } else {
-          localStorage.removeItem("auth_remember_me");
-        }
+        setAuthSession({ token: data.token || "", user: data.user || null, rememberMe });
 
         toast({
           title: "Berhasil masuk",
           description: `Selamat datang, ${data.user?.email || normalizedEmail}`,
         });
-        const redirectTo = searchParams.get("redirect");
-        navigate(redirectTo && redirectTo.startsWith("/") ? redirectTo : "/dashboard");
+        navigateAfterLogin();
         return;
       }
 
@@ -282,11 +341,13 @@ const LoginPage = () => {
           {/* Social */}
           <div>
             <button
-              onClick={() => {}}
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isGoogleSubmitting || isSubmitting}
               className="w-full flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary/80 hover:shadow-card transition-all"
             >
               <GoogleIcon />
-              Google
+              {isGoogleSubmitting ? "Menghubungkan..." : "Google"}
             </button>
           </div>
 

@@ -12,6 +12,13 @@ const D1_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const D1_DATABASE_ID = process.env.CLOUDFLARE_D1_DATABASE_ID;
 const D1_API_TOKEN = process.env.CLOUDFLARE_D1_API_TOKEN;
 const JWT_SECRET = process.env.AUTH_JWT_SECRET || "dev-auth-jwt-secret";
+const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || "";
+const ADMIN_EMAILS = new Set(
+  (process.env.BETTER_AUTH_ADMIN_EMAILS || "adityabintang149@gmail.com")
+    .split(",")
+    .map((email) => normalizeEmail(email))
+    .filter(Boolean),
+);
 const ALLOWED_ORIGINS = (
   process.env.BETTER_AUTH_TRUSTED_ORIGINS || "http://localhost:8080"
 )
@@ -943,6 +950,129 @@ async function loginUser(req, res) {
   });
 }
 
+function getRoleByEmail(email) {
+  return ADMIN_EMAILS.has(email) ? "admin" : "member";
+}
+
+async function verifyFirebaseIdToken(idToken) {
+  if (!FIREBASE_API_KEY) {
+    throw new Error("Firebase API key belum dikonfigurasi di server");
+  }
+
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_API_KEY)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ idToken }),
+    },
+  );
+
+  const data = await response.json().catch(() => ({}));
+  const account = data?.users?.[0];
+
+  if (!response.ok || !account) {
+    throw new Error(data?.error?.message || "Firebase token tidak valid");
+  }
+
+  const email = normalizeEmail(account.email);
+  if (!email) {
+    throw new Error("Email akun Google tidak tersedia");
+  }
+
+  return {
+    uid: String(account.localId || ""),
+    email,
+    name: typeof account.displayName === "string" ? account.displayName.trim() : null,
+  };
+}
+
+async function loginGoogleUser(req, res) {
+  try {
+    const body = await readJsonBody(req);
+    const idToken = typeof body.idToken === "string" ? body.idToken.trim() : "";
+
+    if (!idToken) {
+      sendJson(res, 400, {
+        error: "invalid_request",
+        message: "Firebase ID token wajib diisi",
+      });
+      return;
+    }
+
+    const firebaseUser = await verifyFirebaseIdToken(idToken);
+    const role = getRoleByEmail(firebaseUser.email);
+
+    const rows = await d1Query(
+      "SELECT id, email, name, role FROM users WHERE email = ? LIMIT 1",
+      [firebaseUser.email],
+    );
+
+    let user = rows[0];
+
+    if (!user) {
+      const userId = crypto.randomUUID();
+      const randomPasswordHash = await bcrypt.hash(crypto.randomUUID(), 12);
+
+      await d1Query(
+        "INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)",
+        [userId, firebaseUser.email, randomPasswordHash, firebaseUser.name, role],
+      );
+
+      user = {
+        id: userId,
+        email: firebaseUser.email,
+        name: firebaseUser.name,
+        role,
+      };
+    } else {
+      const shouldUpdateName = !user.name && firebaseUser.name;
+      const shouldUpdateRole = user.role !== role;
+
+      if (shouldUpdateName || shouldUpdateRole) {
+        await d1Query(
+          "UPDATE users SET name = ?, role = ? WHERE id = ?",
+          [firebaseUser.name || user.name || null, role, user.id],
+        );
+        user = {
+          ...user,
+          name: firebaseUser.name || user.name,
+          role,
+        };
+      }
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const expiresIn = 60 * 60 * 24 * 7;
+    const token = createToken({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      iat: now,
+      exp: now + expiresIn,
+    });
+
+    sendJson(res, 200, {
+      ok: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Google sign-in gagal";
+    sendJson(res, 401, {
+      error: "invalid_google_token",
+      message,
+    });
+  }
+}
+
 async function routeAuthRequest(req, res) {
   if (!req.url) {
     sendJson(res, 400, {
@@ -961,6 +1091,11 @@ async function routeAuthRequest(req, res) {
 
   if (req.method === "POST" && requestUrl.pathname === "/api/auth/sign-in/email") {
     await loginUser(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && requestUrl.pathname === "/api/auth/sign-in/google") {
+    await loginGoogleUser(req, res);
     return;
   }
 
