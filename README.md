@@ -89,3 +89,18 @@ Email/password auth now uses a custom auth server backed by Cloudflare D1.
 Auth endpoints handled by the auth server:
 - `POST /api/auth/sign-up/email`
 - `POST /api/auth/sign-in/email`
+
+## Cloudflare R2 Image Upload Setup
+
+Image uploads via `POST /api/upload` can store directly to Cloudflare R2 using S3 API.
+
+Add these variables to `.env`:
+
+- `R2_S3_ENDPOINT` (example: `https://<accountid>.r2.cloudflarestorage.com`)
+- `R2_BUCKET` (example: `metacommunity`)
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+- `R2_PUBLIC_BASE_URL` (public domain for serving image URLs)
+- `R2_UPLOAD_PREFIX` (optional, default: `uploads`)
+
+If R2 config is incomplete, upload falls back to local `./uploads` storage.

@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createWriteStream } from "node:fs";
 import { randomBytes } from "node:crypto";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 
 const PORT = Number(process.env.AUTH_PORT || 3001);
 const D1_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -25,6 +26,30 @@ const ALLOWED_ORIGINS = (
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+
+const R2_S3_ENDPOINT = process.env.R2_S3_ENDPOINT || "";
+const R2_BUCKET = process.env.R2_BUCKET || "";
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || "";
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || "";
+const R2_PUBLIC_BASE_URL = process.env.R2_PUBLIC_BASE_URL || "";
+const R2_UPLOAD_PREFIX = process.env.R2_UPLOAD_PREFIX || "uploads";
+
+const canUseR2 =
+  Boolean(R2_S3_ENDPOINT) &&
+  Boolean(R2_BUCKET) &&
+  Boolean(R2_ACCESS_KEY_ID) &&
+  Boolean(R2_SECRET_ACCESS_KEY);
+
+const r2Client = canUseR2
+  ? new S3Client({
+      region: "auto",
+      endpoint: R2_S3_ENDPOINT,
+      credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
+      },
+    })
+  : null;
 
 const D1_API_URL =
   D1_ACCOUNT_ID && D1_DATABASE_ID
@@ -48,6 +73,76 @@ function sendJson(res, statusCode, body) {
   res.statusCode = statusCode;
   res.setHeader("content-type", "application/json");
   res.end(JSON.stringify(body));
+}
+
+function buildR2PublicUrl(objectKey) {
+  if (R2_PUBLIC_BASE_URL) {
+    return `${R2_PUBLIC_BASE_URL.replace(/\/$/, "")}/${objectKey}`;
+  }
+
+  const endpoint = R2_S3_ENDPOINT.replace(/\/$/, "");
+  return `${endpoint}/${R2_BUCKET}/${objectKey}`;
+}
+
+async function uploadImageToR2(file) {
+  if (!r2Client) {
+    return null;
+  }
+
+  const ext = path.extname(file.filename || "") || ".jpg";
+  const dateSegment = new Date().toISOString().slice(0, 10);
+  const prefix = R2_UPLOAD_PREFIX.replace(/^\/+|\/+$/g, "");
+  const objectKey = `${prefix}/${dateSegment}/${randomBytes(16).toString("hex")}${ext}`;
+
+  await r2Client.send(
+    new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: objectKey,
+      Body: file.data,
+      ContentType: file.type || "application/octet-stream",
+      CacheControl: "public, max-age=31536000",
+    }),
+  );
+
+  return {
+    key: objectKey,
+    url: buildR2PublicUrl(objectKey),
+  };
+}
+
+async function getR2Object(objectKey) {
+  if (!r2Client) {
+    return null;
+  }
+
+  const response = await r2Client.send(
+    new GetObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: objectKey,
+    }),
+  );
+
+  if (!response.Body) {
+    return null;
+  }
+
+  let bodyBuffer;
+  if (typeof response.Body.transformToByteArray === "function") {
+    const bytes = await response.Body.transformToByteArray();
+    bodyBuffer = Buffer.from(bytes);
+  } else {
+    const chunks = [];
+    for await (const chunk of response.Body) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    bodyBuffer = Buffer.concat(chunks);
+  }
+
+  return {
+    body: bodyBuffer,
+    contentType: response.ContentType || "application/octet-stream",
+    cacheControl: response.CacheControl || "public, max-age=31536000",
+  };
 }
 
 function readJsonBody(req) {
@@ -4145,8 +4240,16 @@ async function updateRecording(req, res, id) {
 // Parse multipart form data
 function parseMultipart(req) {
   return new Promise((resolve, reject) => {
-    const contentType = req.headers["content-type"] || "";
-    const boundary = contentType.split("boundary=")[1];
+    const contentTypeRaw = req.headers["content-type"];
+    const contentType = typeof contentTypeRaw === "string" ? contentTypeRaw : "";
+
+    if (!contentType.toLowerCase().startsWith("multipart/form-data")) {
+      reject(new Error("Invalid content type. Expected multipart/form-data"));
+      return;
+    }
+
+    const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+    const boundary = boundaryMatch?.[1] || boundaryMatch?.[2] || "";
 
     if (!boundary) {
       reject(new Error("No boundary found in multipart data"));
@@ -4208,7 +4311,7 @@ function parseMultipart(req) {
 // Image upload handler
 async function uploadImage(req, res) {
   try {
-    const { fields, files } = await parseMultipart(req);
+    const { files } = await parseMultipart(req);
     const file = files.image || files.file;
 
     if (!file) {
@@ -4222,18 +4325,30 @@ async function uploadImage(req, res) {
       return;
     }
 
-    // Create uploads directory if it doesn't exist
+    if (canUseR2) {
+      const uploaded = await uploadImageToR2(file);
+
+      sendJson(res, 200, {
+        ok: true,
+        filename: uploaded?.key,
+        key: uploaded?.key,
+        storage: "r2",
+        url: `/uploads/${uploaded?.key}`,
+        publicUrl: uploaded?.url,
+      });
+      return;
+    }
+
+    // Fallback local storage when R2 config is incomplete.
     const uploadsDir = "./uploads";
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    // Generate unique filename
     const ext = path.extname(file.filename) || ".jpg";
     const filename = `${randomBytes(16).toString("hex")}${ext}`;
     const filepath = path.join(uploadsDir, filename);
 
-    // Save file
     await new Promise((resolve, reject) => {
       fs.writeFile(filepath, file.data, (err) => {
         if (err) reject(err);
@@ -4244,11 +4359,24 @@ async function uploadImage(req, res) {
     sendJson(res, 200, {
       ok: true,
       filename,
+      storage: "local",
       url: `/uploads/${filename}`,
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Upload failed";
+    const isBadRequest =
+      message.includes("multipart/form-data") ||
+      message.includes("No boundary found") ||
+      message.includes("No file provided") ||
+      message.includes("Only image files are allowed");
+
+    if (isBadRequest) {
+      sendJson(res, 400, { error: "invalid_upload_request", message });
+      return;
+    }
+
     console.error("[auth-server] Image upload failed:", error);
-    sendJson(res, 500, { error: "upload_failed", message: error.message });
+    sendJson(res, 500, { error: "upload_failed", message });
   }
 }
 
@@ -4627,6 +4755,24 @@ const server = http.createServer(async (req, res) => {
   // Serve static files from uploads directory
   if (requestUrl.pathname.startsWith("/uploads/")) {
     try {
+      const uploadPath = requestUrl.pathname.replace(/^\/uploads\//, "");
+
+      if (canUseR2 && uploadPath) {
+        try {
+          const r2Object = await getR2Object(decodeURIComponent(uploadPath));
+          if (r2Object) {
+            res.setHeader("Content-Type", r2Object.contentType);
+            res.setHeader("Cache-Control", r2Object.cacheControl);
+            res.statusCode = 200;
+            res.end(r2Object.body);
+            return;
+          }
+        } catch (r2Error) {
+          const message = r2Error instanceof Error ? r2Error.message : String(r2Error);
+          console.warn("[auth-server] Failed to read image from R2:", message);
+        }
+      }
+
       const filepath = path.join(".", requestUrl.pathname);
       // Security: prevent directory traversal
       if (!path.resolve(filepath).startsWith(path.resolve("./uploads"))) {
