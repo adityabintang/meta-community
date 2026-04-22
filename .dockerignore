@@ -5,6 +5,7 @@ node_modules
 dist
 coverage
 uploads
+bun.lockb
 .env
 .env.*
 *.log

@@ -3,14 +3,14 @@ FROM oven/bun:1.2-alpine AS builder
 WORKDIR /app
 
 # Copy manifest and lockfiles first to maximize layer cache reuse.
-COPY package.json bun.lockb bun.lock ./
+COPY package.json bun.lock ./
 
-RUN bun install --frozen-lockfile
+RUN bun install
 
 COPY . .
 
 RUN bun run build
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 
 FROM node:20-alpine AS runtime
 
@@ -29,7 +29,6 @@ COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh && mkdir -p /run/nginx
 
 ENV NODE_ENV=production
-ENV AUTH_PORT=3001
 
 EXPOSE 80
 
