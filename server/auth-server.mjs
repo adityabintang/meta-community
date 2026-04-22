@@ -5090,7 +5090,7 @@ server.on("error", (error) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[auth-server] D1 auth API listening on http://localhost:${PORT}`);
+  console.log(`[auth-server] D1 auth API listening on http://0.0.0.0:${PORT}`);
 });
 
 Promise.all([
