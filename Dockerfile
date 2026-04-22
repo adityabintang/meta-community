@@ -10,7 +10,6 @@ RUN bun install
 COPY . .
 
 RUN bun run build
-RUN bun install --production
 
 FROM node:20-alpine AS runtime
 
