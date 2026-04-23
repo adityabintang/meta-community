@@ -4,13 +4,35 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
-
 
 <url>
   <loc>https://metacommunity.my.id/</loc>
-  <lastmod>2026-04-22T17:35:54+00:00</lastmod>
+  <lastmod>2026-04-23</lastmod>
 </url>
 
+<url>
+  <loc>https://metacommunity.my.id/product</loc>
+  <lastmod>2026-04-23</lastmod>
+</url>
+
+<url>
+  <loc>https://metacommunity.my.id/event</loc>
+  <lastmod>2026-04-23</lastmod>
+</url>
+
+<url>
+  <loc>https://metacommunity.my.id/news</loc>
+  <lastmod>2026-04-23</lastmod>
+</url>
+
+<url>
+  <loc>https://metacommunity.my.id/kebijakan-privasi</loc>
+  <lastmod>2026-04-23</lastmod>
+</url>
+
+<url>
+  <loc>https://metacommunity.my.id/syarat-layanan</loc>
+  <lastmod>2026-04-23</lastmod>
+</url>
 
 </urlset>
