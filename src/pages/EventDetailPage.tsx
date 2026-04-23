@@ -368,18 +368,20 @@ export default function EventDetailPage() {
               </article>
 
               <aside className="space-y-4 lg:sticky lg:top-28 self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-1">
-                <section className="rounded-xl border border-border/50 bg-background/70 p-4 shadow-sm backdrop-blur-sm">
-                  <h2 className="text-sm font-semibold text-foreground mb-3">Creator Profile</h2>
-                  <div className="flex items-center gap-2 text-sm text-foreground mb-2">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    <span>{creatorName}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <Mail className="w-4 h-4" />
-                    <span>{creatorEmail}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Published: {createdDate}</p>
-                </section>
+                {canViewStats ? (
+                  <section className="rounded-xl border border-border/50 bg-background/70 p-4 shadow-sm backdrop-blur-sm">
+                    <h2 className="text-sm font-semibold text-foreground mb-3">Creator Profile</h2>
+                    <div className="flex items-center gap-2 text-sm text-foreground mb-2">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      <span>{creatorName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                      <Mail className="w-4 h-4" />
+                      <span>{creatorEmail}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Published: {createdDate}</p>
+                  </section>
+                ) : null}
 
                 {canViewStats ? (
                   <section className="rounded-xl border border-border/50 bg-background/70 p-4 shadow-sm backdrop-blur-sm">
@@ -401,39 +403,41 @@ export default function EventDetailPage() {
                   </section>
                 ) : null}
 
-                <section className="rounded-xl border border-border/50 bg-background/70 p-4 shadow-sm backdrop-blur-sm">
-                  <h2 className="text-sm font-semibold text-foreground mb-3">
-                    Registrants ({registrations.length})
-                  </h2>
+                {canViewStats ? (
+                  <section className="rounded-xl border border-border/50 bg-background/70 p-4 shadow-sm backdrop-blur-sm">
+                    <h2 className="text-sm font-semibold text-foreground mb-3">
+                      Registrants ({registrations.length})
+                    </h2>
 
-                  {registrations.length > 0 ? (
-                    <>
-                      <div className="flex items-center -space-x-2 mb-3">
-                        {registrations.slice(0, 6).map((person, index) => (
-                          <div
-                            key={`${person.name}-${index}`}
-                            className="w-8 h-8 rounded-full border-2 border-background bg-secondary text-foreground text-xs font-semibold flex items-center justify-center"
-                            title={person.name}
-                          >
-                            {(person.name || "A").slice(0, 1).toUpperCase()}
-                          </div>
-                        ))}
+                    {registrations.length > 0 ? (
+                      <>
+                        <div className="flex items-center -space-x-2 mb-3">
+                          {registrations.slice(0, 6).map((person, index) => (
+                            <div
+                              key={`${person.name}-${index}`}
+                              className="w-8 h-8 rounded-full border-2 border-background bg-secondary text-foreground text-xs font-semibold flex items-center justify-center"
+                              title={person.name}
+                            >
+                              {(person.name || "A").slice(0, 1).toUpperCase()}
+                            </div>
+                          ))}
 
-                        {registrations.length > 6 ? (
-                          <span
-                            className="w-8 h-8 rounded-full border-2 border-background bg-muted text-muted-foreground text-[10px] font-semibold flex items-center justify-center"
-                            title={`${registrations.length - 6} peserta lainnya`}
-                          >
-                            +{registrations.length - 6}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="text-xs text-muted-foreground">Arahkan kursor ke icon profile untuk melihat username.</p>
-                    </>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Belum ada peserta yang registrasi.</p>
-                  )}
-                </section>
+                          {registrations.length > 6 ? (
+                            <span
+                              className="w-8 h-8 rounded-full border-2 border-background bg-muted text-muted-foreground text-[10px] font-semibold flex items-center justify-center"
+                              title={`${registrations.length - 6} peserta lainnya`}
+                            >
+                              +{registrations.length - 6}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-xs text-muted-foreground">Arahkan kursor ke icon profile untuk melihat username.</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Belum ada peserta yang registrasi.</p>
+                    )}
+                  </section>
+                ) : null}
               </aside>
             </div>
           )}

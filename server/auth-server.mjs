@@ -854,6 +854,47 @@ async function ensureEventProductEngagementSchema() {
   );
 }
 
+async function ensureProductReportsSchema() {
+  await d1Query(
+    `CREATE TABLE IF NOT EXISTS product_reports (
+      id TEXT PRIMARY KEY,
+      product_id TEXT NOT NULL,
+      product_title TEXT,
+      reason TEXT,
+      actor_key TEXT NOT NULL,
+      user_id TEXT,
+      user_email TEXT,
+      user_name TEXT,
+      is_anonymous INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      read_at TEXT
+    )`,
+  );
+
+  await ensureColumn("product_reports", "product_id", "TEXT");
+  await ensureColumn("product_reports", "product_title", "TEXT");
+  await ensureColumn("product_reports", "reason", "TEXT");
+  await ensureColumn("product_reports", "actor_key", "TEXT");
+  await ensureColumn("product_reports", "user_id", "TEXT");
+  await ensureColumn("product_reports", "user_email", "TEXT");
+  await ensureColumn("product_reports", "user_name", "TEXT");
+  await ensureColumn("product_reports", "is_anonymous", "INTEGER DEFAULT 0");
+  await ensureColumn("product_reports", "status", "TEXT DEFAULT 'pending'");
+  await ensureColumn("product_reports", "created_at", "TEXT DEFAULT CURRENT_TIMESTAMP");
+  await ensureColumn("product_reports", "read_at", "TEXT");
+
+  await d1Query(
+    `CREATE UNIQUE INDEX IF NOT EXISTS product_reports_actor_idx
+     ON product_reports(product_id, actor_key)`,
+  );
+
+  await d1Query(
+    `CREATE INDEX IF NOT EXISTS product_reports_status_idx
+     ON product_reports(status, created_at DESC)`,
+  );
+}
+
 async function ensureOwnershipColumns() {
   const ownershipColumnDefs = [
     { name: "owner_email", definition: "TEXT" },
@@ -3484,6 +3525,162 @@ async function deleteProductComment(req, res, commentId) {
   }
 }
 
+async function reportProduct(req, res, productId) {
+  try {
+    if (!productId) {
+      sendJson(res, 400, { error: "invalid_request", message: "Product id is required" });
+      return;
+    }
+
+    const productRow = await getProductOwnerRow(productId);
+    if (!productRow) {
+      sendJson(res, 404, { error: "not_found", message: "Product not found" });
+      return;
+    }
+
+    const body = await readJsonBody(req);
+    const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+
+    if (reason.length > 500) {
+      sendJson(res, 400, {
+        error: "invalid_request",
+        message: "Report reason cannot exceed 500 characters",
+      });
+      return;
+    }
+
+    const requestUser = getRequestUser(req);
+    const actor = getRequestActor(req, requestUser);
+    const productIdValue = String(productId);
+
+    const existingRows = await d1Query(
+      "SELECT id FROM product_reports WHERE product_id = ? AND actor_key = ? LIMIT 1",
+      [productIdValue, actor.actorKey],
+    );
+
+    if (existingRows.length > 0) {
+      sendJson(res, 200, {
+        ok: true,
+        message: "Report already submitted",
+      });
+      return;
+    }
+
+    const productTitle =
+      typeof productRow.title === "string" && productRow.title.trim()
+        ? productRow.title.trim()
+        : "Product";
+
+    await d1Query(
+      `INSERT INTO product_reports (id, product_id, product_title, reason, actor_key, user_id, user_email, user_name, is_anonymous, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        crypto.randomUUID(),
+        productIdValue,
+        productTitle,
+        reason || null,
+        actor.actorKey,
+        actor.userId,
+        actor.userEmail,
+        actor.userName,
+        actor.isAnonymous ? 1 : 0,
+        "pending",
+      ],
+    );
+
+    sendJson(res, 201, {
+      ok: true,
+      message: "Product reported successfully",
+    });
+  } catch (error) {
+    console.error("[auth-server] Report product failed:", error);
+    sendJson(res, 500, {
+      error: "failed_to_report_product",
+      message: error.message,
+    });
+  }
+}
+
+async function getAdminNotifications(req, res) {
+  try {
+    const requestUser = getRequestUser(req);
+    if (requestUser?.role !== "admin") {
+      sendJson(res, 403, {
+        error: "forbidden",
+        message: "Only admin can access notifications",
+      });
+      return;
+    }
+
+    const rows = await d1Query(
+      `SELECT id, product_id, product_title, reason, status, created_at, user_name, user_email
+       FROM product_reports
+       ORDER BY created_at DESC
+       LIMIT 100`,
+    );
+
+    const unreadRows = await d1Query(
+      "SELECT COUNT(*) as count FROM product_reports WHERE status = ?",
+      ["pending"],
+    );
+
+    sendJson(res, 200, {
+      notifications: rows.map((row) => ({
+        id: row.id,
+        productId: row.product_id,
+        productTitle: row.product_title || "Product",
+        reason: row.reason || "",
+        status: row.status || "pending",
+        createdAt: row.created_at,
+        reporterName: row.user_name || "Anonymous",
+        reporterEmail: row.user_email || "",
+        href: `/product/${row.product_id}`,
+      })),
+      unreadCount: Number(unreadRows[0]?.count || 0),
+    });
+  } catch (error) {
+    console.error("[auth-server] Get admin notifications failed:", error);
+    sendJson(res, 500, {
+      error: "failed_to_fetch_notifications",
+      message: error.message,
+    });
+  }
+}
+
+async function markAdminNotificationRead(req, res, notificationId) {
+  try {
+    if (!notificationId) {
+      sendJson(res, 400, {
+        error: "invalid_request",
+        message: "Notification id is required",
+      });
+      return;
+    }
+
+    const requestUser = getRequestUser(req);
+    if (requestUser?.role !== "admin") {
+      sendJson(res, 403, {
+        error: "forbidden",
+        message: "Only admin can update notifications",
+      });
+      return;
+    }
+
+    await d1Query(
+      "UPDATE product_reports SET status = ?, read_at = CURRENT_TIMESTAMP WHERE id = ?",
+      ["reviewed", notificationId],
+    );
+
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    console.error("[auth-server] Mark admin notification read failed:", error);
+    sendJson(res, 500, {
+      error: "failed_to_update_notification",
+      message: error.message,
+    });
+  }
+}
+
 async function createNews(req, res) {
   try {
     const requestUser = getRequestUser(req);
@@ -4847,7 +5044,10 @@ const server = http.createServer(async (req, res) => {
     const productIdMatch = requestUrl.pathname.match(/^\/api\/products\/([^/]+)$/);
     const productLikesMatch = requestUrl.pathname.match(/^\/api\/products\/([^/]+)\/likes$/);
     const productCommentsMatch = requestUrl.pathname.match(/^\/api\/products\/([^/]+)\/comments$/);
+    const productReportMatch = requestUrl.pathname.match(/^\/api\/products\/([^/]+)\/report$/);
     const productCommentIdMatch = requestUrl.pathname.match(/^\/api\/product-comments\/([^/]+)$/);
+    const adminNotificationsMatch = requestUrl.pathname.match(/^\/api\/admin\/notifications$/);
+    const adminNotificationIdMatch = requestUrl.pathname.match(/^\/api\/admin\/notifications\/([^/]+)\/read$/);
 
     if (req.method === "POST" && requestUrl.pathname === "/api/upload") {
       await uploadImage(req, res);
@@ -4949,6 +5149,11 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "POST" && productReportMatch) {
+      await reportProduct(req, res, productReportMatch[1]);
+      return;
+    }
+
     if (req.method === "DELETE" && productCommentIdMatch) {
       await deleteProductComment(req, res, productCommentIdMatch[1]);
       return;
@@ -4971,6 +5176,16 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "GET" && requestUrl.pathname === "/api/dashboard/metrics") {
       await getDashboardMetrics(req, res);
+      return;
+    }
+
+    if (req.method === "GET" && adminNotificationsMatch) {
+      await getAdminNotifications(req, res);
+      return;
+    }
+
+    if (req.method === "PATCH" && adminNotificationIdMatch) {
+      await markAdminNotificationRead(req, res, adminNotificationIdMatch[1]);
       return;
     }
 
@@ -5111,6 +5326,9 @@ Promise.all([
   }),
   ensureEventProductEngagementSchema().then(() => {
     console.log("[auth-server] D1 event/product engagement tables are ready");
+  }),
+  ensureProductReportsSchema().then(() => {
+    console.log("[auth-server] D1 product reports table is ready");
   }),
   ensureOwnershipColumns().then(() => {
     console.log("[auth-server] Content ownership columns are ready");

@@ -78,6 +78,11 @@ function formatTimeRange(event: Event) {
   return `${startText} - ${end.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
+function isUrlText(value?: string | null) {
+  if (!value || typeof value !== "string") return false;
+  return /^https?:\/\//i.test(value.trim());
+}
+
 const EventPage = () => {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
@@ -322,6 +327,8 @@ const EventPage = () => {
                 const isUpcoming = !Number.isNaN(eventDate.getTime()) && eventDate.getTime() >= Date.now();
                 const publicLink = event.locationLink || event.embedLink || "";
                 const registrants = registrantMap[String(event.id)] || [];
+                const rawLocation = (event.location || "").trim();
+                const locationLabel = isUrlText(rawLocation) ? "Link meeting tersedia di detail event" : (rawLocation || "Online");
 
                 return (
                   <motion.div
@@ -354,8 +361,8 @@ const EventPage = () => {
                         <span className="px-2.5 py-1 rounded-md bg-background/90 text-foreground text-xs font-medium backdrop-blur-sm">
                           {formatLabel(event.category || "general")}
                         </span>
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium backdrop-blur-sm ${
-                          isUpcoming ? "bg-emerald-500/20 text-emerald-100" : "bg-background/90 text-foreground"
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium shadow-sm ${
+                          isUpcoming ? "bg-emerald-500 text-white" : "bg-background/90 text-foreground"
                         }`}>
                           {isUpcoming ? t(translations.events.upcoming) : t(translations.events.completed)}
                         </span>
@@ -378,7 +385,7 @@ const EventPage = () => {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
-                          <span>{event.location || "Online"}</span>
+                          <span>{locationLabel}</span>
                         </div>
                       </div>
 
@@ -415,23 +422,25 @@ const EventPage = () => {
                         )}
                       </div>
 
-                      {publicLink ? (
-                        <a
-                          href={publicLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
-                        >
-                          {t(translations.events.registerNow)}
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      ) : (
-                        <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium opacity-60 cursor-not-allowed" disabled>
-                          {t(translations.events.registerNow)}
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isUpcoming) return;
+                          navigate(`/event/${event.id}`);
+                        }}
+                        aria-disabled={!isUpcoming}
+                        className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-opacity ${
+                          isUpcoming
+                            ? `bg-primary text-primary-foreground ${publicLink ? "hover:opacity-90" : "opacity-90"}`
+                            : "bg-muted text-muted-foreground cursor-not-allowed opacity-80"
+                        }`}
+                      >
+                        {isUpcoming
+                          ? t(translations.events.registerNow)
+                          : (language === "id" ? "Registrasi Tutup" : "Registrasion Close")}
+                        {isUpcoming ? <ExternalLink className="w-3.5 h-3.5" /> : null}
+                      </button>
                     </div>
                   </motion.div>
                 );

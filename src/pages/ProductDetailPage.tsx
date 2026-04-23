@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, BarChart3, Clock3, Eye, ExternalLink, Heart, Link2, Mail, MessageCircle, Send, Trash2, User } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, BarChart3, Clock3, Eye, ExternalLink, Flag, Heart, Link2, MessageCircle, Send, Trash2, User } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -89,6 +89,7 @@ function safeStat(value: unknown): string {
 }
 
 export default function ProductDetailPage() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const { data: product, isLoading, error } = useProduct(id);
   const token = localStorage.getItem("auth_token");
@@ -121,6 +122,7 @@ export default function ProductDetailPage() {
   };
 
   const user = getUserFromStorage();
+  const isAdmin = user?.role === "admin";
 
   useEffect(() => {
     if (!product?.id) return;
@@ -235,8 +237,61 @@ export default function ProductDetailPage() {
     }
   };
 
+  const handleReportProduct = async () => {
+    if (!product?.id) return;
+
+    try {
+      const reason = window.prompt("Alasan report (opsional, max 500 karakter):", "") || "";
+
+      const res = await fetch(`${CMS_API}/products/${product.id}/report`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ reason: reason.slice(0, 500) }),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to report product");
+      }
+
+      toast({ title: data?.message || "Report submitted" });
+    } catch (error) {
+      toast({
+        title: error instanceof Error ? error.message : "Failed to report product",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!product?.id || !isAdmin) return;
+    if (!confirm("Delete this product after review?")) return;
+
+    try {
+      const res = await fetch(`${CMS_API}/products/${product.id}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to delete product");
+      }
+
+      toast({ title: "Product deleted" });
+      navigate("/dashboard/products");
+    } catch (error) {
+      toast({
+        title: error instanceof Error ? error.message : "Failed to delete product",
+        variant: "destructive",
+      });
+    }
+  };
+
   const creatorName = product?.ownerName || product?.technicalLead || "Anonymous Creator";
-  const creatorEmail = product?.ownerEmail || product?.supportEmail || "-";
   const createdDate = formatDate(product?.createdAt || product?.created_at);
   const updatedDate = formatDate(product?.updatedAt);
   const actionLinks = [product?.productLink, product?.demoLink].filter(
@@ -336,6 +391,20 @@ export default function ProductDetailPage() {
                       {likes} Likes
                     </Button>
 
+                    {!isAdmin ? (
+                      <Button variant="outline" onClick={handleReportProduct} className="gap-2">
+                        <Flag className="w-4 h-4" />
+                        Report Product
+                      </Button>
+                    ) : null}
+
+                    {isAdmin ? (
+                      <Button variant="destructive" onClick={handleDeleteProduct} className="gap-2">
+                        <Trash2 className="w-4 h-4" />
+                        Delete Product
+                      </Button>
+                    ) : null}
+
                     {product.productLink ? (
                       <Button asChild>
                         <a href={product.productLink} target="_blank" rel="noopener noreferrer">
@@ -393,7 +462,7 @@ export default function ProductDetailPage() {
                                 <span className="text-xs text-muted-foreground">
                                   {new Date(comment.created_at).toLocaleDateString("id-ID")}
                                 </span>
-                                {user?.role === "admin" ? (
+                                {isAdmin ? (
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -420,10 +489,6 @@ export default function ProductDetailPage() {
                   <div className="flex items-center gap-2 text-sm text-foreground mb-2">
                     <User className="w-4 h-4 text-muted-foreground" />
                     <span>{creatorName}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <Mail className="w-4 h-4" />
-                    <span>{creatorEmail}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">Published: {createdDate}</p>
                 </section>

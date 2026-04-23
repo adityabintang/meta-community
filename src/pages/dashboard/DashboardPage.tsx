@@ -37,6 +37,18 @@ interface DashboardMetrics {
   };
 }
 
+interface AdminNotification {
+  id: string;
+  productId: string;
+  productTitle: string;
+  reason: string;
+  status: "pending" | "reviewed" | string;
+  createdAt: string;
+  reporterName: string;
+  reporterEmail: string;
+  href: string;
+}
+
 const CMS_API = import.meta.env.VITE_CMS_API_URL || "/api";
 
 async function fetchStats(): Promise<Stats> {
@@ -163,6 +175,9 @@ export default function DashboardPage() {
       uniqueProjectSubmitters: 0,
     },
   });
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetchStats()
@@ -196,6 +211,49 @@ export default function DashboardPage() {
       })
       .finally(() => setMetricsLoading(false));
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const token = localStorage.getItem("auth_token");
+    setNotificationsLoading(true);
+
+    fetch(`${CMS_API}/admin/notifications`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to fetch notifications");
+        return res.json();
+      })
+      .then((data) => {
+        setNotifications(Array.isArray(data.notifications) ? data.notifications : []);
+        setUnreadCount(Number(data.unreadCount || 0));
+      })
+      .catch((error) => {
+        console.error("Failed to fetch notifications:", error);
+      })
+      .finally(() => setNotificationsLoading(false));
+  }, [isAdmin]);
+
+  const markNotificationAsRead = (notificationId: string) => {
+    const target = notifications.find((item) => item.id === notificationId);
+    const wasPending = target?.status === "pending";
+    const token = localStorage.getItem("auth_token");
+
+    fetch(`${CMS_API}/admin/notifications/${notificationId}/read`, {
+      method: "PATCH",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).catch(() => {
+      // Keep navigation smooth even when mark-as-read fails.
+    });
+
+    setNotifications((current) =>
+      current.map((item) => (item.id === notificationId ? { ...item, status: "reviewed" } : item)),
+    );
+    if (wasPending) {
+      setUnreadCount((current) => Math.max(0, current - 1));
+    }
+  };
 
   const getStatValue = (title: string) => {
     const key = title.toLowerCase() as keyof Stats;
@@ -368,9 +426,35 @@ export default function DashboardPage() {
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-sm">
-                No recent activity. Start by creating your first content!
-              </p>
+              {!isAdmin ? (
+                <p className="text-muted-foreground text-sm">
+                  No recent activity. Start by creating your first content!
+                </p>
+              ) : notificationsLoading ? (
+                <p className="text-muted-foreground text-sm">Loading notifications...</p>
+              ) : notifications.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No report notifications.</p>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">Unread reports: {unreadCount}</p>
+                  {notifications.slice(0, 8).map((item) => (
+                    <Link
+                      key={item.id}
+                      to={item.href}
+                      onClick={() => markNotificationAsRead(item.id)}
+                      className="block rounded-lg border border-border/60 p-3 hover:bg-secondary/50 transition-colors"
+                    >
+                      <p className="text-sm font-medium text-foreground line-clamp-1">{item.productTitle}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {item.reason || "Product reported by member/viewer"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        {new Date(item.createdAt).toLocaleString("id-ID")}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

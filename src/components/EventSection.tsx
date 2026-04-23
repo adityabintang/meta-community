@@ -1,24 +1,104 @@
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Calendar, MapPin, Users, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations } from "@/i18n/translations";
-import { usePublishedEventCount } from "@/hooks/use-events";
+import { usePublishedEventCount, usePublishedEvents } from "@/hooks/use-events";
+import type { Event } from "@/lib/api/events";
+
+const CMS_API = import.meta.env.VITE_CMS_API_URL || "/api";
+
+function formatEventDate(value?: string | null, locale = "id-ID") {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString(locale, {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function getEventDateValue(event: Event): number {
+  const value = event.startAt || event.date || event.createdAt || event.created_at;
+  const time = new Date(value || "").getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function normalizeLocation(event: Event, language: "id" | "en") {
+  const location = (event.location || "").trim();
+  if (!location) {
+    return language === "id" ? "Online Event" : "Online Event";
+  }
+
+  if (/^https?:\/\//i.test(location)) {
+    return language === "id" ? "Online Event" : "Online Event";
+  }
+
+  return location;
+}
 
 const EventSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const { t, language } = useLanguage();
   const { data: publishedEventCount = 0 } = usePublishedEventCount();
+  const { data: publishedEvents = [] } = usePublishedEvents();
+  const [participantsMap, setParticipantsMap] = useState<Record<string, number>>({});
+  const locale = language === "id" ? "id-ID" : "en-US";
   const eventSummary =
     language === "id"
       ? `Sudah ada ${publishedEventCount} event yang telah diselenggarakan oleh Meta Community.`
       : `Meta Community has organized ${publishedEventCount} events so far.`;
 
-  // Only show last 3 completed events on home
-  const completedEvents = translations.events.items.filter((e) => e.status.id === translations.events.completed.id);
-  const lastThree = completedEvents.slice(-3);
+  const lastThreeEvents = useMemo(() => {
+    return [...publishedEvents]
+      .filter((event) => getEventDateValue(event) > 0)
+      .sort((a, b) => getEventDateValue(b) - getEventDateValue(a))
+      .slice(0, 3);
+  }, [publishedEvents]);
+
+  useEffect(() => {
+    if (lastThreeEvents.length === 0) {
+      setParticipantsMap({});
+      return;
+    }
+
+    let active = true;
+
+    const loadParticipants = async () => {
+      const results = await Promise.allSettled(
+        lastThreeEvents.map(async (event) => {
+          const response = await fetch(`${CMS_API}/events/${event.id}/registrations`);
+          if (!response.ok) return [String(event.id), 0] as const;
+
+          const data = await response.json();
+          const registrations = Array.isArray(data.registrations) ? data.registrations : [];
+          return [String(event.id), registrations.length] as const;
+        }),
+      );
+
+      if (!active) return;
+
+      const nextMap: Record<string, number> = {};
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          nextMap[result.value[0]] = result.value[1];
+        }
+      }
+
+      setParticipantsMap(nextMap);
+    };
+
+    loadParticipants();
+
+    return () => {
+      active = false;
+    };
+  }, [lastThreeEvents]);
 
   return (
     <section id="event" className="py-24 md:py-32 relative overflow-hidden" ref={ref}>
@@ -43,31 +123,42 @@ const EventSection = () => {
         </motion.div>
 
         <motion.div className="max-w-3xl mx-auto flex flex-col gap-6">
-          {lastThree.map((event, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.15 }}
-              className="flex flex-col sm:flex-row sm:items-center gap-4 p-6 rounded-2xl bg-card shadow-card border border-border/50"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-display font-semibold text-foreground">{t(event.title)}</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-accent/10 text-accent">
-                    {t(event.status)}
-                  </span>
+          {lastThreeEvents.map((event, i) => {
+            const participants = participantsMap[String(event.id)] || 0;
+            const dateValue = event.startAt || event.date || event.createdAt || event.created_at;
+            const eventTime = getEventDateValue(event);
+            const isUpcoming = eventTime > Date.now();
+
+            return (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
+                className="flex flex-col sm:flex-row sm:items-center gap-4 p-6 rounded-2xl bg-card shadow-card border border-border/50"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-display font-semibold text-foreground">{event.title}</h3>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-accent/10 text-accent">
+                      {isUpcoming ? t(translations.events.upcoming) : t(translations.events.completed)}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {formatEventDate(dateValue, locale)}</span>
+                    <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {normalizeLocation(event, language)}</span>
+                    <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {participants} {t(translations.events.participants)}</span>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {t(event.date)}</span>
-                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {t(event.location)}</span>
-                  {event.attendees && (
-                    <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {event.attendees} {t(translations.events.participants)}</span>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
+
+          {lastThreeEvents.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center">
+              {language === "id" ? "Belum ada event." : "No events."}
+            </p>
+          ) : null}
         </motion.div>
 
         <motion.div
