@@ -61,17 +61,21 @@ export const productsApi = {
   },
 
   getApproved(params?: PayloadQueryParams) {
-    return apiClient.get<PayloadResponse<Product>>("/products", {
-      sort: "-createdAt",
-      depth: 1,
-      where: { status: { equals: "approved" } },
-      ...params,
-    });
+    return apiClient.get<PayloadResponse<Product>>(
+      "/products",
+      {
+        sort: "-createdAt",
+        depth: 1,
+        where: { status: { equals: "approved" } },
+        ...params,
+      },
+      { includeAuth: false },
+    );
   },
 
   getById(id: number | string) {
     return apiClient
-      .get<Product | ProductSingleResponse>(`/products/${id}`, { depth: 1 })
+      .get<Product | ProductSingleResponse>(`/products/${id}`, { depth: 1 }, { includeAuth: false })
       .then((response) => ("doc" in response ? response.doc : response));
   },
 

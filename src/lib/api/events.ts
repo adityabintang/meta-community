@@ -65,17 +65,21 @@ export const eventsApi = {
   },
 
   getPublished(params?: PayloadQueryParams) {
-    return apiClient.get<PayloadResponse<Event>>("/events", {
-      sort: "-date",
-      depth: 1,
-      where: { status: { not_equals: "draft" } },
-      ...params,
-    });
+    return apiClient.get<PayloadResponse<Event>>(
+      "/events",
+      {
+        sort: "-date",
+        depth: 1,
+        where: { status: { not_equals: "draft" } },
+        ...params,
+      },
+      { includeAuth: false },
+    );
   },
 
   getById(id: number | string) {
     return apiClient
-      .get<Event | EventSingleResponse>(`/events/${id}`, { depth: 1 })
+      .get<Event | EventSingleResponse>(`/events/${id}`, { depth: 1 }, { includeAuth: false })
       .then((response) => ("doc" in response ? response.doc : response));
   },
 

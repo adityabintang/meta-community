@@ -20,6 +20,11 @@ export interface PayloadQueryParams {
   depth?: number;
 }
 
+interface ApiRequestOptions {
+  includeAuth?: boolean;
+  headers?: Record<string, string>;
+}
+
 function getToken(): string | string | null {
   return localStorage.getItem("auth_token");
 }
@@ -37,15 +42,17 @@ function buildQueryString(params: PayloadQueryParams): string {
   return qs ? `?${qs}` : "";
 }
 
-function getHeaders(custom?: Record<string, string>): HeadersInit {
+function getHeaders(custom?: Record<string, string>, includeAuth = true): HeadersInit {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...custom,
   };
 
-  const token = getToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+  if (includeAuth) {
+    const token = getToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
   }
 
   return headers;
@@ -60,37 +67,37 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const apiClient = {
-  async get<T>(path: string, params?: PayloadQueryParams): Promise<T> {
+  async get<T>(path: string, params?: PayloadQueryParams, options?: ApiRequestOptions): Promise<T> {
     const qs = params ? buildQueryString(params) : "";
     const response = await fetch(`${CMS_API}${path}${qs}`, {
       method: "GET",
-      headers: getHeaders(),
+      headers: getHeaders(options?.headers, options?.includeAuth ?? true),
     });
     return handleResponse<T>(response);
   },
 
-  async post<T>(path: string, data?: unknown): Promise<T> {
+  async post<T>(path: string, data?: unknown, options?: ApiRequestOptions): Promise<T> {
     const response = await fetch(`${CMS_API}${path}`, {
       method: "POST",
-      headers: getHeaders(),
+      headers: getHeaders(options?.headers, options?.includeAuth ?? true),
       body: data ? JSON.stringify(data) : undefined,
     });
     return handleResponse<T>(response);
   },
 
-  async patch<T>(path: string, data: unknown): Promise<T> {
+  async patch<T>(path: string, data: unknown, options?: ApiRequestOptions): Promise<T> {
     const response = await fetch(`${CMS_API}${path}`, {
       method: "PATCH",
-      headers: getHeaders(),
+      headers: getHeaders(options?.headers, options?.includeAuth ?? true),
       body: JSON.stringify(data),
     });
     return handleResponse<T>(response);
   },
 
-  async del<T>(path: string): Promise<T> {
+  async del<T>(path: string, options?: ApiRequestOptions): Promise<T> {
     const response = await fetch(`${CMS_API}${path}`, {
       method: "DELETE",
-      headers: getHeaders(),
+      headers: getHeaders(options?.headers, options?.includeAuth ?? true),
     });
     return handleResponse<T>(response);
   },
