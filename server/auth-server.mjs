@@ -4933,7 +4933,7 @@ async function scrapeEventFromUrl(req, res) {
   }
 }
 
-const server = http.createServer(async (req, res) => {
+export async function handleRequest(req, res) {
   setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
@@ -5290,60 +5290,58 @@ const server = http.createServer(async (req, res) => {
       res.end();
     }
   }
-});
+}
 
-server.on("error", (error) => {
-  if (error?.code === "EADDRINUSE") {
-    console.warn(
-      `[auth-server] Port ${PORT} is already in use. Reusing existing auth server instance.`,
-    );
-    process.exit(0);
+let dbInitPromise = null;
+export function ensureDbInitialized() {
+  if (!dbInitPromise) {
+    dbInitPromise = Promise.all([
+      ensureSchema().then(() => console.log("[auth-server] D1 users table is ready")),
+      ensureEventsSchema().then(() => console.log("[auth-server] D1 events table is ready")),
+      ensureProductsSchema().then(() => console.log("[auth-server] D1 products table is ready")),
+      ensureRecordingsSchema().then(() => console.log("[auth-server] D1 recordings table is ready")),
+      ensureNewsEngagementSchema().then(() => console.log("[auth-server] D1 news engagement tables are ready")),
+      ensureEventProductEngagementSchema().then(() => console.log("[auth-server] D1 event/product engagement tables are ready")),
+      ensureProductReportsSchema().then(() => console.log("[auth-server] D1 product reports table is ready")),
+      ensureOwnershipColumns().then(() => console.log("[auth-server] Content ownership columns are ready")),
+      migrateRecordingsNullIds(),
+    ]).catch((error) => {
+      console.error("[auth-server] Failed to initialize database:", error.message);
+    });
   }
+  return dbInitPromise;
+}
 
-  console.error("[auth-server] Failed to start:", error);
-  process.exit(1);
-});
+if (!process.env.VERCEL) {
+  const server = http.createServer(handleRequest);
 
-server.listen(PORT, () => {
-  console.log(`[auth-server] D1 auth API listening on http://0.0.0.0:${PORT}`);
-});
+  server.on("error", (error) => {
+    if (error?.code === "EADDRINUSE") {
+      console.warn(
+        `[auth-server] Port ${PORT} is already in use. Reusing existing auth server instance.`,
+      );
+      process.exit(0);
+    }
 
-Promise.all([
-  ensureSchema().then(() => {
-    console.log("[auth-server] D1 users table is ready");
-  }),
-  ensureEventsSchema().then(() => {
-    console.log("[auth-server] D1 events table is ready");
-  }),
-  ensureProductsSchema().then(() => {
-    console.log("[auth-server] D1 products table is ready");
-  }),
-  ensureRecordingsSchema().then(() => {
-    console.log("[auth-server] D1 recordings table is ready");
-  }),
-  ensureNewsEngagementSchema().then(() => {
-    console.log("[auth-server] D1 news engagement tables are ready");
-  }),
-  ensureEventProductEngagementSchema().then(() => {
-    console.log("[auth-server] D1 event/product engagement tables are ready");
-  }),
-  ensureProductReportsSchema().then(() => {
-    console.log("[auth-server] D1 product reports table is ready");
-  }),
-  ensureOwnershipColumns().then(() => {
-    console.log("[auth-server] Content ownership columns are ready");
-  }),
-  migrateRecordingsNullIds(),
-]).catch((error) => {
-  console.error("[auth-server] Failed to initialize database:", error.message);
-});
-
-const shutdown = (signal) => {
-  console.log(`[auth-server] Received ${signal}, shutting down...`);
-  server.close(() => {
-    process.exit(0);
+    console.error("[auth-server] Failed to start:", error);
+    process.exit(1);
   });
-};
 
-process.on("SIGINT", () => shutdown("SIGINT"));
-process.on("SIGTERM", () => shutdown("SIGTERM"));
+  server.listen(PORT, () => {
+    console.log(`[auth-server] D1 auth API listening on http://0.0.0.0:${PORT}`);
+  });
+
+  ensureDbInitialized();
+
+  const shutdown = (signal) => {
+    console.log(`[auth-server] Received ${signal}, shutting down...`);
+    server.close(() => {
+      process.exit(0);
+    });
+  };
+
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+}
+
+export default handleRequest;
